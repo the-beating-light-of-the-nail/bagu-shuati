@@ -1,0 +1,27 @@
+{
+  "name": "bagu-shuati",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "bank:json": "python tools/import_questions.py --src upstream/docs --out data/bank.json --format json"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.57.0",
+    "@pinia/nuxt": "*",
+    "chart.js": "4.4.1",
+    "nuxt": "^4",
+    "pinia": "^4",
+    "vue": "^3",
+    "vue-router": "^4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "tailwindcss": "^4"
+  }
+}

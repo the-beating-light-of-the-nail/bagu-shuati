@@ -1,0 +1,181 @@
+@import "tailwindcss";
+/* 沿用旧版内联 tailwind.config，保证 notion.* 配色与字体 token 逐条一致；
+   如有 v4 兼容问题，可改为在 @theme 中逐条声明 --color-notion-* */
+@config "../../../tailwind.config.js";
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #ffffff;
+  color: #37352f;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #dfdfdd;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c7c7c4;
+}
+
+.notion-card {
+  background: #ffffff;
+  border: 1px solid #e9e9e7;
+  border-radius: 8px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+.notion-card-hover:hover {
+  background-color: #f9f9f8;
+  box-shadow: 0 2px 10px rgba(15, 15, 15, 0.04);
+}
+.notion-callout {
+  background-color: #f7f7f5;
+  border: 1px solid #e9e9e7;
+  border-radius: 8px;
+}
+.notion-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #b4b4b0;
+  border-radius: 3.5px;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: all 0.12s ease;
+}
+.notion-checkbox:checked {
+  background-color: #2383e2;
+  border-color: #2383e2;
+}
+.notion-checkbox:checked::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 1.8px solid #ffffff;
+  border-bottom: 1.8px solid #ffffff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+kbd {
+  background-color: #f7f7f5;
+  border: 1px solid #e0e0de;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #5a5853;
+}
+.swipe-card-transition {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-notion-in {
+  animation: fadeSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 单题页「展开参考答案」按钮（<details> 的 summary） */
+.answer-toggle {
+  cursor: pointer;
+  list-style: none;
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: #37352f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.answer-toggle::-webkit-details-marker { display: none; }
+details[open] > .answer-toggle {
+  background: #f7f7f5;
+  color: #37352f;
+  border: 1px solid #e9e9e7;
+}
+
+/* 题库答案的 Markdown 渲染样式（答案原文为 Markdown） */
+.answer-md {
+  font-size: 13px;
+  line-height: 1.72;
+  color: #37352f;
+  word-break: break-word;
+}
+.answer-md-lg { font-size: 14.5px; line-height: 1.78; }
+.answer-md > *:first-child { margin-top: 0; }
+.answer-md > *:last-child { margin-bottom: 0; }
+.answer-md h1, .answer-md h2, .answer-md h3, .answer-md h4, .answer-md h5 {
+  font-weight: 600;
+  font-size: 13px;
+  margin: 14px 0 6px;
+  color: #37352f;
+}
+.answer-md h1 { font-size: 15px; }
+.answer-md h2 { font-size: 14px; }
+.answer-md p { margin: 8px 0; }
+.answer-md ul { list-style: disc; padding-left: 20px; margin: 8px 0; }
+.answer-md ol { list-style: decimal; padding-left: 22px; margin: 8px 0; }
+.answer-md li { margin: 3px 0; }
+.answer-md code {
+  background: #f1f1ef;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #eb5757;
+}
+.answer-md pre {
+  background: #f7f7f5;
+  border: 1px solid #e9e9e7;
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.answer-md pre code {
+  background: transparent;
+  padding: 0;
+  color: #37352f;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+}
+.answer-md table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 12px;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.answer-md th, .answer-md td {
+  border: 1px solid #e9e9e7;
+  padding: 6px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+.answer-md th { background: #f7f7f5; font-weight: 600; }
+.answer-md blockquote {
+  border-left: 3px solid #e9e9e7;
+  padding: 2px 0 2px 12px;
+  color: #787774;
+  margin: 10px 0;
+}
+.answer-md a { color: #2383e2; text-decoration: underline; }
+.answer-md hr { border: 0; border-top: 1px solid #e9e9e7; margin: 14px 0; }
+.answer-md img { max-width: 100%; border-radius: 6px; border: 1px solid #e9e9e7; }

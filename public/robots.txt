@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://the-beating-light-of-the-nail.github.io/bagu-shuati/sitemap.xml

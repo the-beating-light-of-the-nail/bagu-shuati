@@ -1231,6 +1231,9 @@
 
         const buf = [];
         while (i < lines.length && lines[i].trim() && !isBlockStart(lines[i])) { buf.push(lines[i]); i++; }
+        // 兜底：孤立表格行（下一行不是分隔行）会被 isBlockStart 判定为块起始，
+        // 但没有任何分支消费它，必须强行前进一行，否则死循环。
+        if (!buf.length) { buf.push(line); i++; }
         out.push(`<p>${inlineMd(buf.join('\n')).replace(/\n/g, '<br/>')}</p>`);
       }
       return out.join('\n');

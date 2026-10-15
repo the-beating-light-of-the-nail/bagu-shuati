@@ -185,6 +185,7 @@ def parse_topic_file(path: Path, topic_id: str, order: int):
 
     questions, cur, buffer, section = [], None, [], ""
     idx = 0
+    used_ids = {}  # 同一专题内题号可能重复（如 18 大厂题按公司各自从 Q1 编号）
 
     def flush():
         nonlocal cur, buffer
@@ -197,8 +198,14 @@ def parse_topic_file(path: Path, topic_id: str, order: int):
             cur, buffer = None, []
             return
         diff = cur["difficulty"] or stars_to_difficulty(stars)
+        qid = f"{topic_id}-q{cur['no']:03d}"
+        if qid in used_ids:
+            used_ids[qid] += 1
+            qid = f"{qid}-{used_ids[qid]}"
+        else:
+            used_ids[qid] = 1
         q = {
-            "id": f"{topic_id}-q{cur['no']:03d}",
+            "id": qid,
             "topicId": topic_id,
             "topicName": name,
             "category": cur["category"],

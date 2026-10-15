@@ -13,6 +13,12 @@ node_modules/
 dist/
 .data/
 
+# 上游题库仓库的本地克隆（仅 docs，不进版本库）
+upstream/
+
+# IDE / 规划产物
+.trae/
+
 # 编辑器 / 系统
 .DS_Store
 Thumbs.db
