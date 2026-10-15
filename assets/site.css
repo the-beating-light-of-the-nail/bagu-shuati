@@ -1,0 +1,151 @@
+/* AI 八股刷题工作台 · 静态题库站样式（无外部依赖） */
+:root {
+  --text: #37352F;
+  --muted: #787774;
+  --border: #E9E9E7;
+  --bg: #FFFFFF;
+  --soft: #F7F7F5;
+  --blue: #2383E2;
+  --green: #448361;
+  --orange: #D9730D;
+  --red: #D44C47;
+  --purple: #9065B0;
+  --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3 { line-height: 1.35; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 700; color: var(--text); }
+.topnav { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+.topnav .cta {
+  padding: 5px 12px; border-radius: 6px; color: #fff; background: var(--text);
+}
+.topnav .cta:hover { background: #000; text-decoration: none; }
+
+.wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+
+.crumbs { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.crumbs a { color: var(--muted); }
+
+.card {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 22px; background: #fff;
+}
+.card + .card { margin-top: 18px; }
+h1 { font-size: 22px; margin: 0 0 12px; }
+
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 12px; background: var(--soft); color: var(--muted); border: 1px solid var(--border);
+}
+.badge.tone { background: #E7F3F8; color: var(--blue); border-color: transparent; }
+.badge.hot { background: #FAEBDD; color: var(--orange); border-color: transparent; }
+.badge.srs { background: #EDF3EC; color: var(--green); border-color: transparent; }
+
+.lead { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.selftest { border-top: 1px solid var(--border); padding-top: 16px; }
+details.answer > summary {
+  cursor: pointer; list-style: none;
+  display: inline-block; padding: 9px 18px; border-radius: 8px;
+  background: var(--text); color: #fff; font-size: 14px; font-weight: 600;
+}
+details.answer > summary::-webkit-details-marker { display: none; }
+details.answer[open] > summary { background: var(--soft); color: var(--text); border: 1px solid var(--border); }
+details.answer > summary::after { content: " （先自测，再对答案）"; font-weight: 400; font-size: 12px; opacity: .7; }
+details.answer[open] > summary::after { content: ""; }
+
+.answer-md { margin-top: 16px; font-size: 14px; }
+.answer-md strong { font-weight: 600; }
+.answer-md code {
+  background: #F1F1EF; border-radius: 3px; padding: 1px 5px;
+  font-family: var(--mono); font-size: 12.5px; color: #EB5757;
+}
+.answer-md pre {
+  background: var(--soft); border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px; overflow-x: auto; font-size: 12.5px; line-height: 1.55;
+}
+.answer-md pre code { background: none; padding: 0; color: var(--text); }
+.answer-md table { border-collapse: collapse; font-size: 13px; margin: 12px 0; display: block; overflow-x: auto; }
+.answer-md th, .answer-md td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; }
+.answer-md th { background: var(--soft); font-weight: 600; }
+.answer-md blockquote { margin: 12px 0; padding: 2px 0 2px 12px; border-left: 3px solid var(--border); color: var(--muted); }
+.answer-md ul, .answer-md ol { padding-left: 22px; }
+
+.illus { margin: 16px 0 0; text-align: center; }
+.illus img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; }
+.illus figcaption { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+.rate { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border); }
+.rate-title { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.rate-btns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.rate-btns button {
+  font: inherit; text-align: left; cursor: pointer;
+  padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: #fff; font-size: 13px; color: var(--text); line-height: 1.4;
+}
+.rate-btns button:hover { background: var(--soft); }
+.rate-btns sub { color: var(--muted); font-size: 11px; }
+.rate-btns .r-forgot { background: #FDEBEC; }
+.rate-btns .r-hard { background: #FAEBDD; }
+.rate-btns .r-good { background: #E7F3F8; }
+.rate-btns .r-easy { background: #EDF3EC; }
+
+.jump { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.btn {
+  display: inline-block; padding: 8px 14px; border-radius: 7px; font-size: 13px;
+  border: 1px solid var(--border); background: #fff; color: var(--text);
+}
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn:hover { text-decoration: none; opacity: .92; }
+
+.pager { display: flex; justify-content: space-between; gap: 12px; margin: 18px 0; font-size: 13px; }
+
+.related { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 16px; }
+.related h2 { font-size: 15px; margin: 0 0 10px; }
+.related ul { padding-left: 20px; margin: 0 0 10px; font-size: 14px; }
+
+.qlist { padding-left: 22px; font-size: 14px; }
+.qlist li { margin: 5px 0; }
+.qlist .badge { margin-left: 8px; }
+
+.topic-block { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 16px; }
+.topic-block h2 { font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.topic-block ol { margin: 8px 0 0; }
+
+.foot { border-top: 1px solid var(--border); padding: 22px 16px; font-size: 12.5px; color: var(--muted); text-align: center; }
+.foot p { margin: 4px 0; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--text); color: #fff; padding: 9px 16px; border-radius: 8px;
+  font-size: 13px; box-shadow: 0 8px 24px rgba(0, 0, 0, .16); opacity: 0;
+  transition: opacity .18s ease; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+@media (max-width: 560px) {
+  .card { padding: 16px; }
+  h1 { font-size: 19px; }
+  .rate-btns { grid-template-columns: 1fr; }
+}

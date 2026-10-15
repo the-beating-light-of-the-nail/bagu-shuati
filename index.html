@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>AI 八股刷题工作台 · 抗遗忘刷题与面试题库</title>
+  <meta name="description" content="AI 面试题库刷题工作台：28 个专题 / 787 道题的间隔重复刷题与记忆留存分析，含艾宾浩斯复习队列、专题掌握度雷达与刷题热力图。" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="AI 八股刷题工作台" />
+  <meta property="og:title" content="AI 八股刷题工作台 · 抗遗忘刷题与面试题库" />
+  <meta property="og:description" content="28 个专题 / 787 道 AI 面试题，支持沉浸式刷题、艾宾浩斯间隔复习与专题能力分析。" />
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js for Ebbinghaus Curve & Multi-dimensional Analytics -->
@@ -208,6 +214,14 @@
 
 <body class="h-screen flex flex-col md:flex-row overflow-hidden select-none md:select-auto">
 
+  <!-- 无 JS 环境下的可访问/可抓取入口：题库一题一页 -->
+  <noscript>
+    <div style="padding:12px 16px;border-bottom:1px solid #E9E9E7;background:#F7F7F5">
+      当前浏览器未启用 JavaScript，无法使用沉浸式刷题。可先浏览
+      <a href="bank/index.html">题库总览（28 个专题 / 787 题，每题独立页面）</a>。
+    </div>
+  </noscript>
+
   <!-- Mobile Drawer Backdrop -->
   <div id="mobileDrawerBackdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/25 z-40 hidden md:hidden backdrop-blur-[1px] transition-opacity"></div>
 
@@ -248,6 +262,14 @@
           </span>
           <span class="text-[10px] font-mono">1秒开刷</span>
         </button>
+
+        <a href="bank/index.html" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-notion-muted bg-white border border-notion-border rounded-md hover:bg-notion-hover transition">
+          <span class="flex items-center gap-2">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>题库总览（一题一页）</span>
+          </span>
+          <kbd>↗</kbd>
+        </a>
       </div>
 
       <!-- Core Navigation (Streamlined 2 Core Views + Fullscreen Study Launch) -->
@@ -2219,6 +2241,10 @@
       state.isStudyModalOpen = false;
       clearInterval(timerInterval);
       document.getElementById('studyModalOverlay').classList.add('hidden');
+      // 深链打开的题目，关闭后清掉 ?q= 参数，避免刷新时反复弹同题
+      if (location.search.indexOf('q=') !== -1) {
+        history.replaceState(null, '', location.pathname);
+      }
       refreshAllViews();
     }
 
@@ -2534,6 +2560,17 @@
       }
       refreshAllViews();
       switchView('workbench');
+
+      // 深链：从题库静态页「在工作台打开这题」跳进来（index.html?q=<id>）
+      const deepQId = new URLSearchParams(location.search).get('q');
+      if (deepQId) {
+        const target = state.questions.find(x => x.id === deepQId);
+        if (target) {
+          launchStudyModal([target.id], `🎯 单题沉浸强化：${target.title.slice(0, 18)}...`);
+        } else {
+          showToast('未找到该题目，可能题库已更新', 'ℹ️');
+        }
+      }
     };
   </script>
 </body>

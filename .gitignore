@@ -6,6 +6,13 @@
 __pycache__/
 *.py[cod]
 
+# Nuxt
+.nuxt/
+.output/
+node_modules/
+dist/
+.data/
+
 # 编辑器 / 系统
 .DS_Store
 Thumbs.db

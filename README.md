@@ -38,10 +38,35 @@ python -m http.server 8787
 ## 目录结构
 
 ```
-index.html                 全部界面与交互逻辑
+index.html                 刷题工作台（全部界面与交互逻辑）
 data/bank.js               题库数据（28 专题 / 787 题，由脚本生成）
-tools/import_questions.py  题库解析脚本（仅用 Python 标准库）
+assets/site.css|site.js    静态题库站的共享样式与自测脚本
+bank/index.html            静态站入口：按专题列出全部 787 题
+topic/<slug>.html          专题聚合页（28 个）
+q/<id>.html                单题页（787 个）
+sitemap.xml / robots.txt   搜索引擎收录用
+tools/import_questions.py  题库解析脚本（仅用标准库）
+tools/build_site.py        静态站生成脚本（仅用标准库）
 ```
+
+## 静态题库站（面向搜索引擎）
+
+工作台本身是 JS 渲染的单页，搜索引擎抓不到内容。因此额外生成一套「一题一页」的静态站：**每个题目页既是搜索落地页（答案直接写在 HTML 里），又能在页内自测刷题**。
+
+```bash
+python tools/build_site.py --base-url https://your-domain.com
+```
+
+要点：
+
+- 答案放在 `<details>` 折叠块中 —— 源码里可见（爬虫能索引全文），默认折叠（用户先自测再对答案）
+- 每题页带 `title` / `description` / `canonical` / `og:*` / `QAPage` 结构化数据，并有专题页、上下题、同专题内链
+- 页内评分写的是**和工作台同一份** localStorage 进度，两边互通
+- 专题页 / 首页 / 单题页之间互相链接，`sitemap.xml` 共 816 条 URL
+
+`--base-url` 用于生成 canonical 与 sitemap 的绝对地址，默认值是本仓库的 GitHub Pages 地址；**部署到自定义域名时务必用真实域名重跑**，否则 canonical 会指向错误地址。
+
+部署：仓库为纯静态，直接把 `main` 分支根目录托管到 GitHub Pages / Cloudflare Pages 即可，然后到搜索引擎资源平台提交 `sitemap.xml`。
 
 ## 题库再生成
 
