@@ -1,0 +1,2540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AI 八股刷题工作台 · 抗遗忘刷题与面试题库</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for Ebbinghaus Curve & Multi-dimensional Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            notion: {
+              bg: '#FFFFFF',
+              sidebar: '#F7F7F5',
+              hover: '#F1F1EF',
+              border: '#E9E9E7',
+              text: '#37352F',
+              muted: '#787774',
+              blue: '#2383E2',
+              blueBg: '#E7F3F8',
+              green: '#448361',
+              greenBg: '#EDF3EC',
+              orange: '#D9730D',
+              orangeBg: '#FAEBDD',
+              purple: '#9065B0',
+              purpleBg: '#F6F3F9',
+              red: '#D44C47',
+              redBg: '#FDEBEC',
+              grayBg: '#F1F1EF'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #FFFFFF;
+      color: #37352F;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #DFDFDD;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C7C7C4;
+    }
+    .notion-card {
+      background: #FFFFFF;
+      border: 1px solid #E9E9E7;
+      border-radius: 8px;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+    }
+    .notion-card-hover:hover {
+      background-color: #F9F9F8;
+      box-shadow: 0 2px 10px rgba(15, 15, 15, 0.04);
+    }
+    .notion-callout {
+      background-color: #F7F7F5;
+      border: 1px solid #E9E9E7;
+      border-radius: 8px;
+    }
+    .notion-checkbox {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid #B4B4B0;
+      border-radius: 3.5px;
+      background-color: #FFFFFF;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      transition: all 0.12s ease;
+    }
+    .notion-checkbox:checked {
+      background-color: #2383E2;
+      border-color: #2383E2;
+    }
+    .notion-checkbox:checked::before {
+      content: "";
+      width: 9px;
+      height: 5px;
+      border-left: 1.8px solid #FFFFFF;
+      border-bottom: 1.8px solid #FFFFFF;
+      transform: rotate(-45deg) translate(1px, -1px);
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-notion-in {
+      animation: fadeSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    kbd {
+      background-color: #F7F7F5;
+      border: 1px solid #E0E0DE;
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #5A5853;
+    }
+    .swipe-card-transition {
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    }
+
+    /* 题库答案的 Markdown 渲染样式（题库原文为 Markdown） */
+    .answer-md {
+      font-size: 13px;
+      line-height: 1.72;
+      color: #37352F;
+      word-break: break-word;
+    }
+    .answer-md > *:first-child { margin-top: 0; }
+    .answer-md > *:last-child { margin-bottom: 0; }
+    .answer-md h1, .answer-md h2, .answer-md h3, .answer-md h4, .answer-md h5 {
+      font-weight: 600;
+      font-size: 13px;
+      margin: 14px 0 6px;
+      color: #37352F;
+    }
+    .answer-md h1 { font-size: 15px; }
+    .answer-md h2 { font-size: 14px; }
+    .answer-md p { margin: 8px 0; }
+    .answer-md ul { list-style: disc; padding-left: 20px; margin: 8px 0; }
+    .answer-md ol { list-style: decimal; padding-left: 22px; margin: 8px 0; }
+    .answer-md li { margin: 3px 0; }
+    .answer-md code {
+      background: #F1F1EF;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #EB5757;
+    }
+    .answer-md pre {
+      background: #F7F7F5;
+      border: 1px solid #E9E9E7;
+      border-radius: 6px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+    .answer-md pre code {
+      background: transparent;
+      padding: 0;
+      color: #37352F;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre;
+    }
+    .answer-md table {
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 12px;
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .answer-md th, .answer-md td {
+      border: 1px solid #E9E9E7;
+      padding: 6px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .answer-md th { background: #F7F7F5; font-weight: 600; }
+    .answer-md blockquote {
+      border-left: 3px solid #E9E9E7;
+      padding: 2px 0 2px 12px;
+      color: #787774;
+      margin: 10px 0;
+    }
+    .answer-md a { color: #2383E2; text-decoration: underline; }
+    .answer-md hr { border: 0; border-top: 1px solid #E9E9E7; margin: 14px 0; }
+    .answer-md img { max-width: 100%; border-radius: 6px; border: 1px solid #E9E9E7; }
+  </style>
+</head>
+
+<body class="h-screen flex flex-col md:flex-row overflow-hidden select-none md:select-auto">
+
+  <!-- Mobile Drawer Backdrop -->
+  <div id="mobileDrawerBackdrop" onclick="toggleMobileSidebar(false)" class="fixed inset-0 bg-black/25 z-40 hidden md:hidden backdrop-blur-[1px] transition-opacity"></div>
+
+  <!-- Left Sidebar (Notion Workspace Sidebar - Streamlined to 2 Core Views + Quick Actions) -->
+  <aside id="appSidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-notion-sidebar border-r border-notion-border flex flex-col justify-between transition-all duration-200 transform -translate-x-full md:translate-x-0 shrink-0">
+    <div class="p-3 space-y-3.5 overflow-y-auto flex-1">
+      <!-- Workspace Header -->
+      <div class="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-notion-hover cursor-pointer">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-6 h-6 rounded bg-notion-text text-white flex items-center justify-center text-xs font-bold shrink-0">N</div>
+          <div class="truncate">
+            <div class="text-sm font-semibold text-notion-text leading-tight truncate">AI 八股刷题工作台</div>
+            <div class="text-[11px] text-notion-muted" id="sidebarBankMeta">抗遗忘刷题与面试题库</div>
+          </div>
+        </div>
+        <button onclick="toggleDesktopSidebar()" class="hidden md:flex p-1 rounded hover:bg-black/5 text-notion-muted" title="收起侧边栏">
+          <i data-lucide="chevrons-left" class="w-4 h-4"></i>
+        </button>
+        <button onclick="toggleMobileSidebar(false)" class="md:hidden p-1 rounded hover:bg-black/5 text-notion-muted">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Quick Actions: Search & Smart Preset -->
+      <div class="px-1 space-y-1.5">
+        <button onclick="openQuickFilterSearch()" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-notion-muted bg-white border border-notion-border rounded-md hover:bg-notion-hover transition">
+          <span class="flex items-center gap-2">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <span>快速搜题 / 筛选记忆库...</span>
+          </span>
+          <kbd>/</kbd>
+        </button>
+
+        <button onclick="openSmartPresetModal()" class="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-medium text-notion-blue bg-notion-blueBg/70 border border-notion-blue/20 rounded-md hover:bg-notion-blueBg transition">
+          <span class="flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>⚡ 一键智能抽题组卷</span>
+          </span>
+          <span class="text-[10px] font-mono">1秒开刷</span>
+        </button>
+      </div>
+
+      <!-- Core Navigation (Streamlined 2 Core Views + Fullscreen Study Launch) -->
+      <div class="space-y-0.5">
+        <div class="px-2 py-1 text-[11px] font-semibold text-notion-muted uppercase tracking-wider">核心工作区 (精简高效)</div>
+        <button onclick="switchView('workbench')" id="nav-workbench" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-md text-sm font-medium transition">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">🏠</span>
+            <span>今日工作台与分析</span>
+          </span>
+          <span id="sidebarDueBadge" class="text-[11px] px-1.5 py-0.5 rounded bg-notion-orangeBg text-notion-orange font-mono font-medium"></span>
+        </button>
+
+        <button onclick="switchView('database')" id="nav-database" class="nav-item w-full flex items-center justify-between px-2.5 py-2 rounded-md text-sm font-medium transition">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">🗂️</span>
+            <span>题库路线与记忆库</span>
+          </span>
+          <span class="text-[11px] text-notion-muted font-mono" id="sidebarTotalCount">加载中</span>
+        </button>
+
+        <button onclick="startDailyCappedReview()" class="w-full flex items-center justify-between px-2.5 py-2 rounded-md text-sm font-medium text-notion-muted hover:bg-notion-hover hover:text-notion-text transition">
+          <span class="flex items-center gap-2.5">
+            <span class="text-base">🎯</span>
+            <span>进入沉浸式刷题层</span>
+          </span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-notion-blueBg text-notion-blue font-medium">全屏模态</span>
+        </button>
+      </div>
+
+      <!-- Quick Shortcut: Learning Routes (动态渲染) -->
+      <div class="pt-1 space-y-0.5">
+        <div class="px-2 py-1 text-[11px] font-semibold text-notion-muted uppercase tracking-wider flex items-center justify-between">
+          <span>岗位刷题路线</span>
+          <span class="text-[10px] font-normal">点击速览</span>
+        </div>
+        <div id="sidebarRoutesList" class="space-y-0.5"></div>
+      </div>
+
+      <!-- Quick Shortcut: Topic Banks (动态渲染) -->
+      <div class="pt-1 space-y-0.5">
+        <div class="px-2 py-1 text-[11px] font-semibold text-notion-muted uppercase tracking-wider flex items-center justify-between">
+          <span>专题题库直达</span>
+          <span class="text-[10px] font-normal" id="sidebarTopicHint"></span>
+        </div>
+        <div id="sidebarTopicsList" class="space-y-0.5"></div>
+        <button onclick="switchView('database'); setDatabaseTab('all');" class="w-full mt-0.5 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] text-notion-blue hover:bg-notion-blueBg/60 transition">
+          <span>查看全部题库 →</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-3 border-t border-notion-border bg-[#F3F3F0]/60 space-y-2">
+      <div class="flex items-center justify-between text-xs">
+        <span class="text-notion-muted flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-notion-blue"></i>
+          <span>待刷清单 (Inbox)</span>
+        </span>
+        <span id="sidebarBasketCount" class="font-semibold text-notion-blue font-mono">0 题</span>
+      </div>
+      <button onclick="startCustomSelectionStudy()" id="sidebarStartCustomBtn" class="w-full py-1.5 px-3 rounded-md text-xs font-medium bg-notion-text text-white hover:bg-black transition flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+        <i data-lucide="play" class="w-3.5 h-3.5"></i>
+        <span>刷已勾选清单</span>
+      </button>
+      <div class="flex items-center justify-between pt-1 text-[11px] text-notion-muted">
+        <span>刷题记录仅保存在本机</span>
+        <button onclick="resetDemoData()" class="underline hover:text-notion-text">重置刷题记录</button>
+      </div>
+      <a href="https://github.com/guocong-bincai/ai-interview-guide" target="_blank" rel="noopener" class="flex items-center justify-center gap-1 pt-1 text-[11px] text-notion-muted hover:text-notion-blue">
+        <i data-lucide="github" class="w-3 h-3"></i>
+        <span>题库来源：ai-interview-guide</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0 h-full bg-white relative">
+
+    <!-- Top Notion Breadcrumb & Action Header -->
+    <header class="h-12 border-b border-notion-border px-3 md:px-6 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur z-20">
+      <div class="flex items-center gap-2 min-w-0">
+        <button onclick="toggleMobileSidebar(true)" class="md:hidden p-1.5 rounded-md hover:bg-notion-hover text-notion-text">
+          <i data-lucide="menu" class="w-4 h-4"></i>
+        </button>
+        <button id="expandSidebarBtn" onclick="toggleDesktopSidebar()" class="hidden p-1.5 rounded-md hover:bg-notion-hover text-notion-muted" title="展开侧边栏">
+          <i data-lucide="panel-left-open" class="w-4 h-4"></i>
+        </button>
+
+        <nav class="flex items-center gap-1.5 text-xs md:text-sm truncate">
+          <span class="text-notion-muted hidden sm:inline cursor-pointer hover:underline" onclick="switchView('workbench')">AI 八股刷题工作台</span>
+          <span class="text-notion-muted hidden sm:inline">/</span>
+          <span id="breadcrumbCurrent" class="font-medium text-notion-text truncate flex items-center gap-1.5">
+            <span>🏠</span>
+            <span>今日工作台与分析</span>
+          </span>
+        </nav>
+      </div>
+
+      <!-- Right Action Pills -->
+      <div class="flex items-center gap-2">
+        <button onclick="openSmartPresetModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-notion-blueBg text-notion-blue hover:opacity-90 transition">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>⚡ 智能组卷</span>
+        </button>
+
+        <button onclick="startDailyCappedReview()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-notion-orangeBg text-notion-orange hover:opacity-90 transition">
+          <i data-lucide="flame" class="w-3.5 h-3.5"></i>
+          <span>今日待刷 <strong id="headerDueCount" class="font-mono">0</strong></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Scrollable Content Container -->
+    <main id="mainScrollContainer" class="flex-1 overflow-y-auto pb-28 md:pb-16">
+
+      <!-- =========================================================
+           VIEW 1: 🏠 今日工作台与多维分析 (WORKBENCH & ANALYTICS COMBINED)
+      ========================================================== -->
+      <section id="view-workbench" class="view-section max-w-6xl mx-auto px-4 sm:px-8 pt-6 md:pt-9 space-y-8 animate-notion-in">
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="text-4xl select-none">🧠</div>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-notion-text">今日抗遗忘工作台 & 能力全景分析</h1>
+            <p class="text-xs md:text-sm text-notion-muted">
+              将「今日复习任务」、「岗位路线进度」与「专题掌握度分析」聚合一屏，告别繁琐跳转，打开即刷。
+            </p>
+          </div>
+          <!-- Anti-Avalanche Daily Cap Control -->
+          <div class="flex items-center gap-2 bg-notion-sidebar px-3 py-2 rounded-lg border border-notion-border self-start md:self-auto">
+            <i data-lucide="shield-check" class="w-4 h-4 text-notion-green shrink-0"></i>
+            <span class="text-xs text-notion-muted">防雪崩每日复习上限:</span>
+            <select id="dailyCapSelect" onchange="updateDailyCap(this.value)" class="text-xs font-semibold bg-white border border-notion-border rounded px-2 py-1 text-notion-text focus:outline-none">
+              <option value="5" selected>5 题 / 天 (轻松模式)</option>
+              <option value="8">8 题 / 天 (标准节奏)</option>
+              <option value="12">12 题 / 天 (冲刺模式)</option>
+              <option value="99">不设上限 (全量展示)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ebbinghaus Review Callout with Anti-Avalanche Protection -->
+        <div class="notion-callout p-4 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-l-4 border-l-notion-blue">
+          <div class="space-y-2.5 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-lg">⏰</span>
+              <h2 class="text-base font-bold text-notion-text">今日艾宾浩斯抗遗忘队列</h2>
+              <span id="wbUrgentBadge" class="text-xs px-2 py-0.5 rounded-full bg-notion-orangeBg text-notion-orange font-semibold"></span>
+              <span id="wbAvalancheBadge" class="text-xs px-2 py-0.5 rounded-full bg-notion-greenBg text-notion-green font-medium hidden"></span>
+            </div>
+            <p id="wbCalloutDesc" class="text-xs md:text-sm text-notion-muted leading-relaxed"></p>
+            <div id="wbDuePreviewPills" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0">
+            <button onclick="startDailyCappedReview()" class="px-5 py-2.5 rounded-lg text-xs md:text-sm font-semibold bg-notion-blue text-white hover:bg-[#1B6EC2] transition flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+              <span id="wbPrimaryStartText">立即沉浸式刷今日队列</span>
+            </button>
+            <button onclick="openSmartPresetModal()" class="px-4 py-2 rounded-lg text-xs font-medium bg-white border border-notion-border text-notion-text hover:bg-notion-hover transition flex items-center justify-center gap-1.5">
+              <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-notion-blue"></i>
+              <span>⚡ 按条件智能抽题组卷</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Key Metrics Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div class="notion-card p-4 space-y-1">
+            <div class="flex items-center justify-between text-xs text-notion-muted">
+              <span>今日已完成刷题</span>
+              <span class="text-base">🔥</span>
+            </div>
+            <div class="text-2xl font-bold text-notion-text font-mono" id="metricTodayCount">0</div>
+            <div class="text-[11px] text-notion-green" id="metricStreakSub">开始刷题，记录你的打卡节奏</div>
+          </div>
+
+          <div class="notion-card p-4 space-y-1 cursor-pointer notion-card-hover" onclick="switchView('database'); setDatabaseTab('due');">
+            <div class="flex items-center justify-between text-xs text-notion-muted">
+              <span>今日待刷 / 总衰减题数</span>
+              <span class="text-base">⏳</span>
+            </div>
+            <div class="text-2xl font-bold text-notion-orange font-mono" id="metricDueCount">0</div>
+            <div class="text-[11px] text-notion-muted" id="metricDueSub">点击查看完整待复习清单</div>
+          </div>
+
+          <div class="notion-card p-4 space-y-1 cursor-pointer notion-card-hover" onclick="switchView('database'); setDatabaseTab('logs');">
+            <div class="flex items-center justify-between text-xs text-notion-muted">
+              <span>累计刷题总次数</span>
+              <span class="text-base">📚</span>
+            </div>
+            <div class="text-2xl font-bold text-notion-text font-mono" id="metricTotalReviews">0</div>
+            <div class="text-[11px] text-notion-muted" id="metricCoveredSub">覆盖 13/15 道核心真题</div>
+          </div>
+
+          <div class="notion-card p-4 space-y-1">
+            <div class="flex items-center justify-between text-xs text-notion-muted">
+              <span>全库平均记忆留存率</span>
+              <span class="text-base">📈</span>
+            </div>
+            <div class="text-2xl font-bold text-notion-blue font-mono" id="metricAvgRetention">0%</div>
+            <div class="text-[11px] text-notion-muted">基于艾宾浩斯衰减模型估算</div>
+          </div>
+        </div>
+
+        <!-- Active Learning Routes & Topic Banks Quick Grid -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between border-b border-notion-border pb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🗺️</span>
+              <h2 class="text-base font-semibold text-notion-text">精选刷题路线与专题题库直达</h2>
+            </div>
+            <button onclick="switchView('database')" class="text-xs text-notion-blue hover:underline flex items-center gap-1">
+              <span>进入题库与记忆库自由选题</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <div id="wbRoutesAndBanksGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Combined Analytics Section: Ebbinghaus Curve + 6D Radar + AI Diagnosis -->
+        <div class="space-y-4 pt-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-notion-border pb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📊</span>
+              <h2 class="text-base font-semibold text-notion-text">艾宾浩斯遗忘曲线 & 专题能力诊断</h2>
+            </div>
+            <button onclick="startWeaknessSpecialStudy()" class="text-xs px-3 py-1 rounded-md bg-notion-purpleBg text-notion-purple font-medium hover:opacity-90 transition flex items-center gap-1.5 self-start sm:self-auto">
+              <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+              <span>一键特训薄弱与未刷盲区</span>
+            </button>
+          </div>
+
+          <!-- AI Diagnosis Callout -->
+          <div id="wbDiagnosisBox" class="notion-callout p-4 text-xs md:text-sm text-notion-text leading-relaxed space-y-1.5"></div>
+
+          <!-- Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Ebbinghaus Curve -->
+            <div class="notion-card p-4 md:p-5 space-y-2">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs md:text-sm font-semibold text-notion-text">📉 艾宾浩斯衰减曲线 vs 间隔重复强化</h3>
+                <span class="text-[11px] text-notion-orange font-mono">75% 复习警戒线</span>
+              </div>
+              <div class="h-56 w-full">
+                <canvas id="ebbinghausChart"></canvas>
+              </div>
+            </div>
+
+            <!-- 6-Dimension Capability Radar -->
+            <div class="notion-card p-4 md:p-5 space-y-2">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs md:text-sm font-semibold text-notion-text">🕸️ 六大专题记忆留存掌握度雷达</h3>
+                <span class="text-[11px] text-notion-muted">随每次刷题评分动态演进</span>
+              </div>
+              <div class="h-56 w-full flex items-center justify-center">
+                <canvas id="radarChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Week Contribution Heatmap -->
+          <div class="notion-card p-4 md:p-5 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="text-xs md:text-sm font-semibold text-notion-text">🟩 近 16 周沉浸刷题记忆热力图</h3>
+                <p class="text-[11px] text-notion-muted">每次在全屏沉浸层完成评分后，今日热力格与刷题次数将实时点亮</p>
+              </div>
+              <div class="flex items-center gap-1.5 text-[11px] text-notion-muted">
+                <span>少</span>
+                <span class="w-3 h-3 rounded-sm bg-[#F1F1EF] border border-notion-border"></span>
+                <span class="w-3 h-3 rounded-sm bg-[#D3E5EF]"></span>
+                <span class="w-3 h-3 rounded-sm bg-[#7FB8E6]"></span>
+                <span class="w-3 h-3 rounded-sm bg-[#2383E2]"></span>
+                <span>多</span>
+              </div>
+            </div>
+            <div id="heatmapGrid" class="flex gap-1.5 overflow-x-auto py-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           VIEW 2: 🗂️ 题库路线与记忆库 (UNIFIED EXPLORE & MEMORY DATABASE)
+      ========================================================== -->
+      <section id="view-database" class="view-section hidden max-w-6xl mx-auto px-4 sm:px-8 pt-6 md:pt-9 space-y-6 animate-notion-in">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="text-3xl md:text-4xl">🗂️</div>
+            <h1 class="text-2xl font-bold text-notion-text">题库路线速览 & 艾宾浩斯记忆库</h1>
+            <p class="text-xs md:text-sm text-notion-muted">
+              底层采用统一的 Notion Database：既可按「路线/题库」整组推进，也可按「遗忘曲线状态」查看每道题的<strong>已刷次数、最近刷完时间与个人批注</strong>，或自由勾选组建专属题单。
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openSmartPresetModal()" class="px-3 py-1.5 rounded-md text-xs font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover transition flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-notion-blue"></i>
+              <span>⚡ 智能抽题组卷</span>
+            </button>
+            <button onclick="startCustomSelectionStudy()" class="px-3.5 py-1.5 rounded-md text-xs font-medium bg-notion-blue text-white hover:bg-[#1B6EC2] transition flex items-center gap-1.5">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span>刷待刷清单 (<span id="dbTopSelectedCount" class="font-mono">0</span>)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Routes & Topic Banks Showcase -->
+        <div class="notion-card p-4 space-y-4 bg-notion-sidebar/40">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button onclick="switchShowcaseMode('routes')" id="showcaseBtn-routes" class="px-2.5 py-1 rounded text-xs font-semibold bg-notion-text text-white transition">
+                🛣️ 岗位刷题路线
+              </button>
+              <button onclick="switchShowcaseMode('banks')" id="showcaseBtn-banks" class="px-2.5 py-1 rounded text-xs font-medium bg-white border border-notion-border text-notion-text hover:bg-notion-hover transition">
+                📦 专题题库
+              </button>
+            </div>
+            <button onclick="toggleShowcaseCollapse()" class="text-xs text-notion-muted hover:text-notion-text flex items-center gap-1">
+              <span id="showcaseCollapseText">收起速览卡</span>
+              <i data-lucide="chevron-up" id="showcaseCollapseIcon" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div id="showcaseContentWrap">
+            <!-- Routes Cards -->
+            <div id="showcaseRoutesGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-3.5"></div>
+            <!-- Banks Cards -->
+            <div id="showcaseBanksGrid" class="hidden grid-cols-1 lg:grid-cols-3 gap-3.5"></div>
+          </div>
+        </div>
+
+        <!-- Unified Notion Database View Tabs -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between border-b border-notion-border overflow-x-auto no-scrollbar gap-2">
+            <div class="flex items-center gap-1">
+              <button onclick="setDatabaseTab('all')" id="dbTab-all" class="db-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-notion-text text-notion-text whitespace-nowrap flex items-center gap-1.5">
+                <span>📋 全部题目</span>
+                <span id="tabCount-all" class="px-1.5 py-0.2 rounded bg-notion-sidebar text-[11px] font-mono">15</span>
+              </button>
+              <button onclick="setDatabaseTab('due')" id="dbTab-due" class="db-tab px-3 py-2 text-xs md:text-sm font-medium border-b-2 border-transparent text-notion-muted hover:text-notion-text whitespace-nowrap flex items-center gap-1.5">
+                <span>⏳ 遗忘曲线待复习 (&lt;75%)</span>
+                <span id="tabCount-due" class="px-1.5 py-0.2 rounded bg-notion-orangeBg text-notion-orange text-[11px] font-mono font-semibold">0</span>
+              </button>
+              <button onclick="setDatabaseTab('weak')" id="dbTab-weak" class="db-tab px-3 py-2 text-xs md:text-sm font-medium border-b-2 border-transparent text-notion-muted hover:text-notion-text whitespace-nowrap flex items-center gap-1.5">
+                <span>🔥 易错/模糊/未刷</span>
+                <span id="tabCount-weak" class="px-1.5 py-0.2 rounded bg-notion-redBg text-notion-red text-[11px] font-mono">0</span>
+              </button>
+              <button onclick="setDatabaseTab('mastered')" id="dbTab-mastered" class="db-tab px-3 py-2 text-xs md:text-sm font-medium border-b-2 border-transparent text-notion-muted hover:text-notion-text whitespace-nowrap flex items-center gap-1.5">
+                <span>✅ 已稳固掌握 (≥75%)</span>
+                <span id="tabCount-mastered" class="px-1.5 py-0.2 rounded bg-notion-greenBg text-notion-green text-[11px] font-mono">0</span>
+              </button>
+              <button onclick="setDatabaseTab('logs')" id="dbTab-logs" class="db-tab px-3 py-2 text-xs md:text-sm font-medium border-b-2 border-transparent text-notion-muted hover:text-notion-text whitespace-nowrap flex items-center gap-1.5">
+                <span>🕒 刷题打卡流水日志</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter & Search Bar (Hidden when on 'logs' tab) -->
+          <div id="dbFilterToolbar" class="notion-callout p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+              <div class="relative flex-1 min-w-[180px]">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-notion-muted absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                <input id="dbSearchInput" oninput="renderUnifiedDatabase()" type="text" placeholder="搜索题目名称、关键词、个人笔记..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-notion-border rounded-md focus:outline-none focus:border-notion-blue" />
+              </div>
+
+              <select id="dbBankFilter" onchange="renderUnifiedDatabase()" class="px-2.5 py-1.5 text-xs bg-white border border-notion-border rounded-md text-notion-text focus:outline-none max-w-[190px]">
+                <option value="all">全部专题题库</option>
+              </select>
+
+              <select id="dbRouteFilter" onchange="renderUnifiedDatabase()" class="px-2.5 py-1.5 text-xs bg-white border border-notion-border rounded-md text-notion-text focus:outline-none max-w-[190px]">
+                <option value="all">全部岗位路线</option>
+              </select>
+
+              <select id="dbDiffFilter" onchange="renderUnifiedDatabase()" class="px-2.5 py-1.5 text-xs bg-white border border-notion-border rounded-md text-notion-text focus:outline-none">
+                <option value="all">全部难度</option>
+                <option value="简单">简单</option>
+                <option value="中等">中等</option>
+                <option value="困难">困难</option>
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between lg:justify-end gap-2">
+              <button onclick="toggleSelectAllFiltered()" class="px-2.5 py-1.5 text-xs font-medium bg-white border border-notion-border rounded-md hover:bg-notion-hover transition">
+                全选当前筛选入清单
+              </button>
+              <button onclick="studyAllFilteredNow()" class="px-2.5 py-1.5 text-xs font-medium bg-notion-text text-white rounded-md hover:bg-black transition">
+                直接刷当前筛选
+              </button>
+              <div class="inline-flex rounded-md border border-notion-border bg-white p-0.5">
+                <button onclick="setDbLayout('table')" id="dbLayoutBtn-table" class="px-2 py-1 rounded text-xs font-medium bg-notion-sidebar text-notion-text flex items-center gap-1">
+                  <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
+                  <span>表格</span>
+                </button>
+                <button onclick="setDbLayout('gallery')" id="dbLayoutBtn-gallery" class="px-2 py-1 rounded text-xs font-medium text-notion-muted flex items-center gap-1">
+                  <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                  <span>画廊</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Database Table View -->
+          <div id="dbTableViewWrapper" class="notion-card overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-notion-border bg-notion-sidebar/70 text-[11px] font-semibold text-notion-muted uppercase">
+                    <th class="py-2.5 px-3 w-10 text-center">清单</th>
+                    <th class="py-2.5 px-3 min-w-[250px]">题目名称 & 个人笔记锚点</th>
+                    <th class="py-2.5 px-3 whitespace-nowrap">题库 & 路线阶段</th>
+                    <th class="py-2.5 px-3 whitespace-nowrap">难度</th>
+                    <th class="py-2.5 px-3 whitespace-nowrap">累计已刷 / 最近刷完</th>
+                    <th class="py-2.5 px-3 whitespace-nowrap">记忆留存率 & 下次节点</th>
+                    <th class="py-2.5 px-3 text-right whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="dbTableBody" class="divide-y divide-notion-border text-xs"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Database Gallery View -->
+          <div id="dbGalleryViewWrapper" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+          <!-- Chronological Logs View (Visible when dbTab === 'logs') -->
+          <div id="dbLogsViewWrapper" class="hidden notion-card divide-y divide-notion-border text-xs"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Floating Custom Selection Inbox Bar -->
+    <div id="floatingCustomBar" class="hidden fixed bottom-16 md:bottom-5 left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-xl bg-notion-text text-white px-4 py-2.5 rounded-xl shadow-xl border border-white/10 flex items-center justify-between gap-3 animate-notion-in">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-6 h-6 rounded-md bg-notion-blue text-white text-xs font-bold font-mono flex items-center justify-center shrink-0" id="floatingSelectedCount">0</span>
+        <div class="truncate">
+          <div class="text-xs font-medium truncate">待刷清单 (Inbox) 已就绪</div>
+          <div class="text-[10px] text-gray-300 truncate" id="floatingSelectedBreakdown">跨题库自由组合题单</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="clearCustomSelection()" class="px-2.5 py-1 rounded text-xs text-gray-300 hover:text-white hover:bg-white/10 transition">
+          清空
+        </button>
+        <button onclick="startCustomSelectionStudy()" class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-notion-blue hover:bg-[#1B6EC2] text-white transition flex items-center gap-1.5">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>拉起沉浸式刷题</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar (Streamlined 3 Actions) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 h-14 bg-white/95 backdrop-blur border-t border-notion-border flex items-center justify-around z-30 px-2">
+      <button onclick="switchView('workbench')" id="mnav-workbench" class="mnav-item flex flex-col items-center justify-center py-1 px-3 text-notion-blue">
+        <span class="text-base leading-none">🏠</span>
+        <span class="text-[10px] mt-1 font-medium">今日工作台</span>
+      </button>
+      <button onclick="startDailyCappedReview()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-notion-text text-white text-xs font-semibold shadow-md">
+        <span>⚡</span>
+        <span>沉浸刷题</span>
+      </button>
+      <button onclick="switchView('database')" id="mnav-database" class="mnav-item flex flex-col items-center justify-center py-1 px-3 text-notion-muted">
+        <span class="text-base leading-none">🗂️</span>
+        <span class="text-[10px] mt-1 font-medium">题库与记忆库</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =========================================================
+       MODAL 1: 🎯 全屏沉浸式刷题模态层 (FULLSCREEN FOCUS STUDY OVERLAY)
+  ========================================================== -->
+  <div id="studyModalOverlay" class="hidden fixed inset-0 z-50 bg-[#F7F7F5] flex flex-col justify-between overflow-hidden animate-notion-in">
+    <!-- Top Minimalist Focus Bar -->
+    <header class="h-13 bg-white border-b border-notion-border px-3 md:px-8 py-2.5 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <button onclick="closeStudyModal()" class="px-2.5 py-1 rounded-md text-xs font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover text-notion-text flex items-center gap-1 transition" title="退出沉浸刷题 (Esc)">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          <span>退出</span>
+        </button>
+        <div class="truncate">
+          <div class="flex items-center gap-2">
+            <span id="studySessionTitle" class="text-xs md:text-sm font-semibold text-notion-text truncate">当前刷题队列</span>
+            <span id="studyQueueCounter" class="px-2 py-0.5 rounded bg-notion-blueBg text-notion-blue font-mono text-xs font-semibold">1 / 5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="studyTimerDisplay" class="text-xs font-mono text-notion-muted hidden sm:inline">⏱️ 00:00</span>
+        <button onclick="prevStudyQuestion()" class="p-1.5 rounded-md bg-white border border-notion-border hover:bg-notion-hover text-notion-text" title="上一题 (←)">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+        <button onclick="nextStudyQuestion()" class="p-1.5 rounded-md bg-white border border-notion-border hover:bg-notion-hover text-notion-text" title="下一题 (→)">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Thin Progress Line -->
+    <div class="w-full h-1 bg-notion-border shrink-0">
+      <div id="studyProgressBar" class="h-full bg-notion-blue transition-all duration-300" style="width: 20%"></div>
+    </div>
+
+    <!-- Center Scrollable Flashcard Area (Supports Touch Swipe on Mobile) -->
+    <div id="studyCardScrollWrap" class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 md:py-8">
+      <div id="studySwipeCard" class="max-w-3xl mx-auto notion-card p-5 md:p-8 space-y-6 shadow-sm bg-white swipe-card-transition">
+
+        <!-- Card Top Meta & Ebbinghaus Memory Pill -->
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-notion-border pb-3.5">
+          <div id="studyMetaBadges" class="flex flex-wrap items-center gap-1.5"></div>
+          <div id="studyHistoryStatsPill" class="text-[11px] font-mono text-notion-muted bg-notion-sidebar px-2.5 py-1 rounded-md border border-notion-border"></div>
+        </div>
+
+        <!-- Question Title & Thinking Hint -->
+        <div class="space-y-3">
+          <h1 id="studyQuestionTitle" class="text-base sm:text-lg md:text-xl font-bold text-notion-text leading-snug select-text"></h1>
+          <div id="studyQuestionHint" class="notion-callout p-3 text-xs md:text-sm text-notion-muted flex items-start gap-2.5"></div>
+        </div>
+
+        <!-- Pre-Reveal: 10-Second Keyword Anchor Input (Zero Question Bank Modification Needed) -->
+        <div id="studyPreRevealArea" class="space-y-3 pt-1">
+          <div class="p-3.5 rounded-lg bg-notion-sidebar/70 border border-notion-border space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-notion-text flex items-center gap-1.5">
+                <span>🎯 10秒关键词思维锚点（可选，强迫大脑主动提取）</span>
+              </span>
+              <span class="text-[11px] text-notion-muted hidden sm:inline">输入后直接按 <kbd>Enter</kbd> 揭晓答案对比</span>
+            </div>
+            <input
+              id="studyKeywordInput"
+              type="text"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); revealStudyAnswer();}"
+              placeholder="敲入 2~4 个核心得分词（如：Self-Attention、Rerank、KV Cache）..."
+              class="w-full px-3 py-2 text-xs md:text-sm bg-white border border-notion-border rounded-md focus:outline-none focus:border-notion-blue transition"
+            />
+          </div>
+
+          <button onclick="revealStudyAnswer()" class="w-full py-3 px-4 rounded-lg bg-notion-text text-white hover:bg-black text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+            <span>揭晓标准解析并对比思路 (Space / Enter)</span>
+          </button>
+
+          <div class="text-center text-[11px] text-notion-muted md:hidden">
+            💡 手机端提示：翻开答案后，支持<strong>左滑卡片记为“模糊”</strong>、<strong>右滑卡片记为“掌握”</strong>
+          </div>
+        </div>
+
+        <!-- Post-Reveal: User Keyword Comparison + Standard Answer + Personal Note -->
+        <div id="studyAnswerPanel" class="hidden space-y-5 pt-3 border-t border-notion-border animate-notion-in select-text">
+
+          <!-- Side-by-Side / Top Comparison of User's Keywords -->
+          <div id="studyUserAnchorCompareBox" class="p-3 rounded-lg bg-notion-blueBg/50 border border-notion-blue/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-notion-blue shrink-0">🎯 你刚才提取的锚点词：</span>
+              <span id="studyUserAnchorText" class="font-mono text-notion-text font-medium"></span>
+            </div>
+            <span class="text-[11px] text-notion-muted shrink-0">请对照下方标准解析评估记忆准确度</span>
+          </div>
+
+          <!-- Standard Reference Answer (Original Unmodified HTML) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-notion-blue flex items-center gap-1.5">
+                <i data-lucide="book-open-check" class="w-4 h-4"></i>
+                <span>标准参考解析与架构要点</span>
+              </span>
+              <span class="text-[11px] text-notion-muted md:hidden">👈 左滑模糊 · 右滑掌握 👉</span>
+            </div>
+            <!-- 题库原始配图（点击可看原图，用于图文双通道记忆） -->
+            <div id="studyAnswerIllustration" class="hidden"></div>
+            <div id="studyAnswerContent" class="answer-md bg-notion-sidebar/40 p-4 rounded-lg border border-notion-border"></div>
+          </div>
+
+          <!-- Lightweight Personal Interview Note (Auto-saved per question) -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-xs text-notion-muted">
+              <span class="font-medium flex items-center gap-1.5">
+                <i data-lucide="File-edit" class="w-3.5 h-3.5"></i>
+                <span>个人面试话术批注 / 追问补充（自动保存在本题记录中）</span>
+              </span>
+              <span id="noteSaveStatus" class="text-[11px] text-notion-green">自动保存</span>
+            </div>
+            <textarea
+              id="studyPersonalNote"
+              rows="2"
+              oninput="saveCurrentQuestionNote(this.value)"
+              placeholder="记录你自己的口语化背诵口诀，或面试官可能追问的细节..."
+              class="w-full p-2.5 text-xs bg-notion-sidebar/50 border border-notion-border rounded-md focus:bg-white focus:outline-none focus:border-notion-blue transition resize-y"
+            ></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Sticky Ebbinghaus Rating Bar (Thumb-friendly on Mobile & Shortcut-ready on PC) -->
+    <footer id="studyBottomRatingFooter" class="bg-white border-t border-notion-border px-3 sm:px-6 py-3 shrink-0">
+      <div class="max-w-3xl mx-auto">
+        <div id="studyFooterPreHint" class="text-center text-xs text-notion-muted py-1.5">
+          请先在脑海中回忆或输入关键词锚点，点击上方按钮或按 <kbd>Space</kbd> 揭晓答案后再进行艾宾浩斯评分
+        </div>
+        <div id="studyFooterRatingBtns" class="hidden grid-cols-2 sm:grid-cols-4 gap-2">
+          <button onclick="submitStudyRating('forgot')" class="p-2.5 rounded-lg border border-notion-border bg-notion-redBg/70 hover:bg-notion-redBg text-left transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-notion-red">1 · 忘记了</span>
+              <kbd class="hidden sm:inline">1</kbd>
+            </div>
+            <div class="text-[10px] text-notion-muted mt-0.5">10分钟重刷 · 留存35%</div>
+          </button>
+
+          <button onclick="submitStudyRating('hard')" class="p-2.5 rounded-lg border border-notion-border bg-notion-orangeBg/70 hover:bg-notion-orangeBg text-left transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-notion-orange">2 · 印象模糊</span>
+              <kbd class="hidden sm:inline">2</kbd>
+            </div>
+            <div class="text-[10px] text-notion-muted mt-0.5">1天后复习 · 留存65%</div>
+          </button>
+
+          <button onclick="submitStudyRating('good')" class="p-2.5 rounded-lg border border-notion-border bg-notion-blueBg/70 hover:bg-notion-blueBg text-left transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-notion-blue">3 · 比较熟悉</span>
+              <kbd class="hidden sm:inline">3</kbd>
+            </div>
+            <div class="text-[10px] text-notion-muted mt-0.5">3天后复习 · 留存86%</div>
+          </button>
+
+          <button onclick="submitStudyRating('easy')" class="p-2.5 rounded-lg border border-notion-border bg-notion-greenBg/70 hover:bg-notion-greenBg text-left transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-notion-green">4 · 完全掌握</span>
+              <kbd class="hidden sm:inline">4</kbd>
+            </div>
+            <div class="text-[10px] text-notion-muted mt-0.5">7天后复习 · 留存98%</div>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: ⚡ 一键智能抽题组卷弹窗 (SMART PRESET BUILDER MODAL)
+  ========================================================== -->
+  <div id="smartPresetModal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-notion-border rounded-xl max-w-lg w-full p-6 space-y-5 shadow-xl animate-notion-in">
+      <div class="flex items-start justify-between border-b border-notion-border pb-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">⚡</span>
+            <h3 class="text-base font-bold text-notion-text">一键智能抽题组卷（免手动勾选）</h3>
+          </div>
+          <p class="text-xs text-notion-muted">告别在海量题库里逐个打勾的疲劳，按条件 1 秒钟生成专属刷题队列</p>
+        </div>
+        <button onclick="closeSmartPresetModal()" class="p-1 rounded hover:bg-notion-hover text-notion-muted">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <!-- Step 1: Select Banks -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-semibold text-notion-text block">1. 包含哪些专题题库？（可多选）</label>
+            <div class="flex items-center gap-2 text-[11px]">
+              <button type="button" onclick="setPresetTopicsAll(true)" class="text-notion-blue hover:underline">全选</button>
+              <span class="text-notion-border">|</span>
+              <button type="button" onclick="setPresetTopicsAll(false)" class="text-notion-muted hover:text-notion-text">清空</button>
+            </div>
+          </div>
+          <div id="presetTopicGrid" class="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1 border border-notion-border rounded-lg p-2 bg-notion-sidebar/30"></div>
+        </div>
+
+        <!-- Step 2: Priority Strategy -->
+        <div class="space-y-2">
+          <label class="font-semibold text-notion-text block">2. 抽题策略与记忆状态筛选</label>
+          <select id="presetStrategySelect" class="w-full p-2.5 rounded-lg border border-notion-border bg-white text-notion-text focus:outline-none">
+            <option value="due_first">⏰ 优先抗遗忘待复习 + 未刷盲区题（推荐）</option>
+            <option value="priority_first">🔥 优先抽面试高频必考题（题库标注的高频顺序）</option>
+            <option value="weak_only">🔥 仅抽易错/印象模糊/低留存题目 (&lt;75%)</option>
+            <option value="unseen_only">🆕 仅抽尚未刷过的新题 (0次)</option>
+            <option value="random_all">🎲 在所选题库中随机混合抽取</option>
+          </select>
+        </div>
+
+        <!-- Step 3: Question Count -->
+        <div class="space-y-2">
+          <label class="font-semibold text-notion-text block">3. 本轮刷题数量</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button type="button" onclick="setPresetCount(3)" id="presetCountBtn-3" class="preset-cnt-btn py-2 rounded-lg border border-notion-border bg-white text-notion-text font-mono">3 题 (通勤)</button>
+            <button type="button" onclick="setPresetCount(5)" id="presetCountBtn-5" class="preset-cnt-btn py-2 rounded-lg border border-notion-blue bg-notion-blueBg text-notion-blue font-bold font-mono">5 题 (标准)</button>
+            <button type="button" onclick="setPresetCount(10)" id="presetCountBtn-10" class="preset-cnt-btn py-2 rounded-lg border border-notion-border bg-white text-notion-text font-mono">10 题 (深度)</button>
+            <button type="button" onclick="setPresetCount(99)" id="presetCountBtn-99" class="preset-cnt-btn py-2 rounded-lg border border-notion-border bg-white text-notion-text font-mono">全部匹配</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-notion-border">
+        <button onclick="closeSmartPresetModal()" class="px-4 py-2 rounded-lg text-xs font-medium bg-notion-sidebar hover:bg-notion-hover text-notion-text transition">
+          取消
+        </button>
+        <button onclick="launchSmartPresetStudy()" class="px-5 py-2 rounded-lg text-xs font-semibold bg-notion-blue text-white hover:bg-[#1B6EC2] transition flex items-center gap-1.5">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>立即生成队列并开刷</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 3: 🎉 本轮刷题完成总结弹窗 (SESSION SUMMARY MODAL)
+  ========================================================== -->
+  <div id="sessionSummaryModal" class="hidden fixed inset-0 bg-black/30 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-notion-border rounded-xl max-w-md w-full p-6 space-y-5 shadow-xl animate-notion-in">
+      <div class="flex items-start justify-between">
+        <div class="space-y-1">
+          <div class="text-3xl">🎉</div>
+          <h3 class="text-lg font-bold text-notion-text">本轮沉浸式刷题完成！</h3>
+          <p class="text-xs text-notion-muted">所有题目的累计刷题次数、刷完时间与艾宾浩斯留存率已实时同步。</p>
+        </div>
+        <button onclick="closeSessionSummaryModal()" class="p-1 rounded hover:bg-notion-hover text-notion-muted">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 text-center">
+        <div class="notion-callout p-3">
+          <div class="text-lg font-bold font-mono text-notion-text" id="sumModalCount">0</div>
+          <div class="text-[11px] text-notion-muted">本轮完成题数</div>
+        </div>
+        <div class="notion-callout p-3">
+          <div class="text-lg font-bold font-mono text-notion-green" id="sumModalMastered">0</div>
+          <div class="text-[11px] text-notion-muted">熟悉/完全掌握</div>
+        </div>
+        <div class="notion-callout p-3">
+          <div class="text-lg font-bold font-mono text-notion-blue" id="sumModalAvgRet">0%</div>
+          <div class="text-[11px] text-notion-muted">全库平均留存</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+        <button onclick="closeSessionSummaryModal(); switchView('database'); setDatabaseTab('logs');" class="flex-1 py-2 px-3 rounded-md text-xs font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover text-notion-text transition">
+          查看刷题流水与曲线记录
+        </button>
+        <button onclick="closeSessionSummaryModal(); switchView('workbench');" class="flex-1 py-2 px-3 rounded-md text-xs font-medium bg-notion-blue text-white hover:bg-[#1B6EC2] transition">
+          返回今日工作台
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="notionToast" class="hidden fixed top-14 right-4 z-[60] bg-notion-text text-white text-xs px-3.5 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-notion-in">
+    <span id="notionToastIcon">✨</span>
+    <span id="notionToastText">操作成功</span>
+  </div>
+
+  <!-- =========================================================
+       题库数据（由 tools/import_questions.py 生成，含 28 个专题 / 787 道题）
+  ========================================================== -->
+  <script src="data/bank.js"></script>
+
+  <!-- =========================================================
+       JAVASCRIPT: DATA, STATE MANAGEMENT & INTERACTIVE LOGIC
+  ========================================================== -->
+  <script>
+    /* =========================================================
+       题库数据：来自 https://github.com/guocong-bincai/ai-interview-guide
+       由 tools/import_questions.py 预先解析生成 data/bank.js，页面加载时读取
+    ========================================================== */
+    const BANK = window.AI_INTERVIEW_BANK || { routes: [], topics: [], questions: [] };
+    const TOPICS = BANK.topics;
+    const TOPIC_MAP = Object.fromEntries(TOPICS.map(t => [t.id, t]));
+    const ROUTES = BANK.routes;
+    const ROUTE_MAP = Object.fromEntries(ROUTES.map(r => [r.id, r]));
+
+    const TONE_CLASSES = {
+      blue: 'bg-notion-blueBg text-notion-blue',
+      purple: 'bg-notion-purpleBg text-notion-purple',
+      orange: 'bg-notion-orangeBg text-notion-orange',
+      green: 'bg-notion-greenBg text-notion-green',
+      red: 'bg-notion-redBg text-notion-red'
+    };
+    const DOT_CLASSES = {
+      blue: 'bg-notion-blue',
+      purple: 'bg-notion-purple',
+      orange: 'bg-notion-orange',
+      green: 'bg-notion-green',
+      red: 'bg-notion-red'
+    };
+
+    // 新题的初始记忆状态；真实刷题进度单独保存在 localStorage 的 SRS 快照里
+    const NEW_QUESTION_STATE = {
+      reviewCount: 0,
+      lastReviewedAt: '尚未刷过',
+      retention: 25,
+      nextReviewText: '新题待攻克',
+      lastRating: null,
+      userNote: ''
+    };
+    const SRS_FIELDS = ['reviewCount', 'lastReviewedAt', 'retention', 'nextReviewText', 'lastRating', 'userNote'];
+
+    // 每道题补上专题配色与所属岗位路线（一道题可同时属于多条路线）
+    const ALL_QUESTIONS = BANK.questions.map(q => {
+      const topic = TOPIC_MAP[q.topicId] || {};
+      return Object.assign({}, q, NEW_QUESTION_STATE, {
+        topicIcon: topic.icon || '📄',
+        tone: topic.tone || 'blue',
+        routeIds: ROUTES.filter(r => r.topics.includes(q.topicId)).map(r => r.id)
+      });
+    });
+
+
+    let state = {
+      currentView: 'workbench', // 'workbench' | 'database'
+      showcaseMode: 'routes',   // 'routes' | 'banks'
+      showcaseCollapsed: false,
+      databaseTab: 'all',       // 'all' | 'due' | 'weak' | 'mastered' | 'logs'
+      dbLayout: 'table',        // 'table' | 'gallery'
+      dbVisibleCount: 60,       // 数据库单次渲染上限（题库共 787 题，避免一次性渲染卡顿）
+      sidebarCollapsed: false,
+      dailyCap: 5,              // Anti-Avalanche daily review cap
+      presetCount: 5,           // Smart Preset default question count
+      presetTopics: new Set(TOPICS.map(t => t.id)),
+      todayStudiedCount: 0,
+      questions: [],
+      studyLogs: [],
+      selectedQuestionIds: new Set(),
+      // Fullscreen Study Modal State
+      isStudyModalOpen: false,
+      studyQueue: [],
+      studyQueueTitle: '今日抗遗忘复习队列',
+      currentStudyIndex: 0,
+      isAnswerRevealed: false,
+      sessionCompletedCount: 0,
+      sessionMasteredCount: 0,
+      sessionSeconds: 0
+    };
+
+    const LS_KEY = 'bagu_shuati_v1';
+    let timerInterval = null;
+    let ebbinghausChartInstance = null;
+    let radarChartInstance = null;
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+
+    function addDaysDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+
+    function getCurrentTimestampStr() {
+      const d = new Date();
+      return `${todayStr()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+    }
+
+    /* =========================================================
+       轻量 Markdown 渲染：题库答案是 Markdown 原文（含表格 / 代码块 /
+       引用 / 列表），这里在渲染刷题卡片时按需转换，不引入外部依赖
+    ========================================================== */
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function inlineMd(s) {
+      let out = escapeHtml(s);
+      out = out.replace(/`([^`]+)`/g, (m, c) => '@@CODE' + c + '@@');
+      out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      out = out.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      out = out.replace(/@@CODE([^@]*)@@/g, '<code>$1</code>');
+      return out;
+    }
+
+    function splitTableRow(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+    }
+
+    function isBlockStart(line) {
+      return /^\s*```/.test(line)
+        || /^(#{1,6})\s+/.test(line)
+        || /^\s*>/.test(line)
+        || /^\s*([-*+]|\d+[.、)])\s+/.test(line)
+        || /^\s*\|.*\|\s*$/.test(line)
+        || /^\s*([-*_])\1{2,}\s*$/.test(line);
+    }
+
+    function mdToHtml(md) {
+      if (!md) return '';
+      const lines = md.replace(/\r\n/g, '\n').split('\n');
+      const out = [];
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+
+        if (/^\s*```/.test(line)) {
+          const buf = [];
+          i++;
+          while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) { buf.push(lines[i]); i++; }
+          i++;
+          out.push(`<pre><code>${escapeHtml(buf.join('\n'))}</code></pre>`);
+          continue;
+        }
+
+        if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1])) {
+          const head = splitTableRow(line);
+          i += 2;
+          const rows = [];
+          while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { rows.push(splitTableRow(lines[i])); i++; }
+          out.push('<table><thead><tr>' + head.map(h => `<th>${inlineMd(h)}</th>`).join('') +
+            '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map(c => `<td>${inlineMd(c)}</td>`).join('') + '</tr>').join('') +
+            '</tbody></table>');
+          continue;
+        }
+
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) {
+          const lvl = Math.min(heading[1].length, 5);
+          out.push(`<h${lvl}>${inlineMd(heading[2])}</h${lvl}>`);
+          i++;
+          continue;
+        }
+
+        if (/^\s*([-*_])\1{2,}\s*$/.test(line)) {
+          out.push('<hr/>');
+          i++;
+          continue;
+        }
+
+        if (/^\s*>/.test(line)) {
+          const buf = [];
+          while (i < lines.length && /^\s*>/.test(lines[i])) {
+            buf.push(lines[i].replace(/^\s*>\s?/, ''));
+            i++;
+          }
+          out.push('<blockquote>' + inlineMd(buf.join('\n')).replace(/\n/g, '<br/>') + '</blockquote>');
+          continue;
+        }
+
+        const item = line.match(/^\s*([-*+]|\d+[.、)])\s+(.*)$/);
+        if (item) {
+          const ordered = /\d/.test(item[1]);
+          const items = [];
+          while (i < lines.length) {
+            const m = lines[i].match(/^\s*([-*+]|\d+[.、)])\s+(.*)$/);
+            if (!m) break;
+            items.push(m[2]);
+            i++;
+          }
+          const tag = ordered ? 'ol' : 'ul';
+          out.push(`<${tag}>` + items.map(t => `<li>${inlineMd(t)}</li>`).join('') + `</${tag}>`);
+          continue;
+        }
+
+        if (!line.trim()) { i++; continue; }
+
+        const buf = [];
+        while (i < lines.length && lines[i].trim() && !isBlockStart(lines[i])) { buf.push(lines[i]); i++; }
+        out.push(`<p>${inlineMd(buf.join('\n')).replace(/\n/g, '<br/>')}</p>`);
+      }
+      return out.join('\n');
+    }
+
+    function loadAppState() {
+      state.questions = ALL_QUESTIONS.map(q => Object.assign({}, q));
+      let snap = null;
+      try {
+        snap = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      } catch (e) {
+        snap = null;
+      }
+      if (snap) {
+        Object.entries(snap.srs || {}).forEach(([id, s]) => {
+          const q = state.questions.find(x => x.id === id);
+          if (!q) return;
+          SRS_FIELDS.forEach(f => { if (s[f] !== undefined) q[f] = s[f]; });
+        });
+        state.studyLogs = Array.isArray(snap.logs) ? snap.logs : [];
+        state.todayStudiedCount = snap.todayDate === todayStr() ? (snap.today || 0) : 0;
+        state.dailyCap = snap.dailyCap || 5;
+        state.selectedQuestionIds = new Set(snap.selected || []);
+        if (Array.isArray(snap.presetTopics) && snap.presetTopics.length) {
+          state.presetTopics = new Set(snap.presetTopics.filter(id => TOPIC_MAP[id]));
+        }
+      }
+    }
+
+    // 只把「有刷题痕迹」的题目写进 localStorage，避免整库 3MB 数据撑爆存储配额
+    function saveAppState() {
+      try {
+        const srs = {};
+        state.questions.forEach(q => {
+          const touched = q.reviewCount > 0 || (q.userNote || '') || q.lastRating;
+          if (!touched) return;
+          const item = {};
+          SRS_FIELDS.forEach(f => { item[f] = q[f]; });
+          srs[q.id] = item;
+        });
+        const snap = {
+          v: 1,
+          srs,
+          logs: state.studyLogs.slice(0, 400),
+          today: state.todayStudiedCount,
+          todayDate: todayStr(),
+          dailyCap: state.dailyCap,
+          selected: Array.from(state.selectedQuestionIds),
+          presetTopics: Array.from(state.presetTopics)
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(snap));
+      } catch (e) {
+        // 存储空间受限时静默降级
+      }
+    }
+
+    function resetDemoData() {
+      localStorage.removeItem(LS_KEY);
+      state.questions.forEach(q => Object.assign(q, NEW_QUESTION_STATE));
+      state.studyLogs = [];
+      state.todayStudiedCount = 0;
+      state.selectedQuestionIds = new Set();
+      state.dailyCap = 5;
+      document.getElementById('dailyCapSelect').value = '5';
+      refreshAllViews();
+      showToast('已清空本机刷题记录，题库回到初始状态', '♻️');
+    }
+
+    // 已刷过且留存率跌破 75% 的题目视为「待复习」，按留存率升序（越紧急越靠前）
+    function getAllDueQuestions() {
+      return state.questions
+        .filter(q => q.reviewCount > 0 && q.retention < 75)
+        .sort((a, b) => a.retention - b.retention);
+    }
+
+    // Returns capped due questions based on Anti-Avalanche daily cap
+    function getCappedDueQuestions() {
+      const allDue = getAllDueQuestions();
+      return allDue.slice(0, state.dailyCap);
+    }
+
+    function updateDailyCap(val) {
+      state.dailyCap = parseInt(val, 10) || 5;
+      refreshAllViews();
+      showToast(`防雪崩每日复习上限已调整为 ${state.dailyCap === 99 ? '不限' : state.dailyCap + ' 题'}`, '🛡️');
+    }
+
+    function getDifficultyBadge(diff) {
+      if (diff === '简单') return `<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-notion-greenBg text-notion-green">简单</span>`;
+      if (diff === '中等') return `<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-notion-blueBg text-notion-blue">中等</span>`;
+      return `<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-notion-redBg text-notion-red">困难</span>`;
+    }
+
+    // 专题徽标：配色取自专题的 tone
+    function getBankBadge(topicId, topicName) {
+      const topic = TOPIC_MAP[topicId] || {};
+      const cls = TONE_CLASSES[topic.tone] || TONE_CLASSES.blue;
+      return `<span class="px-2 py-0.5 rounded text-[11px] font-medium ${cls}">${topic.icon || '📄'} ${topicName}</span>`;
+    }
+
+    function getRetentionBarHtml(retention) {
+      let colorClass = 'bg-notion-green';
+      let textClass = 'text-notion-green';
+      if (retention < 55) {
+        colorClass = 'bg-notion-red';
+        textClass = 'text-notion-red';
+      } else if (retention < 75) {
+        colorClass = 'bg-notion-orange';
+        textClass = 'text-notion-orange';
+      }
+      return `
+        <div class="flex items-center gap-2">
+          <div class="w-16 h-1.5 bg-notion-sidebar rounded-full overflow-hidden border border-notion-border">
+            <div class="h-full ${colorClass}" style="width: ${retention}%"></div>
+          </div>
+          <span class="font-mono font-semibold ${textClass}">${retention}%</span>
+        </div>
+      `;
+    }
+
+    function showToast(message, icon = '✨') {
+      const toast = document.getElementById('notionToast');
+      document.getElementById('notionToastIcon').textContent = icon;
+      document.getElementById('notionToastText').textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2600);
+    }
+
+    function switchView(viewName) {
+      state.currentView = viewName;
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) target.classList.remove('hidden');
+
+      // Desktop Sidebar Active State
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('bg-notion-hover', 'text-notion-text', 'font-semibold');
+        btn.classList.add('text-notion-muted');
+      });
+      const activeNav = document.getElementById(`nav-${viewName}`);
+      if (activeNav) {
+        activeNav.classList.add('bg-notion-hover', 'text-notion-text', 'font-semibold');
+        activeNav.classList.remove('text-notion-muted');
+      }
+
+      // Mobile Bottom Nav Active State
+      document.querySelectorAll('.mnav-item').forEach(btn => {
+        btn.classList.remove('text-notion-blue');
+        btn.classList.add('text-notion-muted');
+      });
+      const activeMNav = document.getElementById(`mnav-${viewName}`);
+      if (activeMNav) {
+        activeMNav.classList.add('text-notion-blue');
+        activeMNav.classList.remove('text-notion-muted');
+      }
+
+      const titles = {
+        workbench: '<span>🏠</span><span>今日工作台与分析</span>',
+        database: '<span>🗂️</span><span>题库路线与记忆库 (Database)</span>'
+      };
+      document.getElementById('breadcrumbCurrent').innerHTML = titles[viewName] || '';
+
+      if (viewName === 'workbench') {
+        renderWorkbenchView();
+        setTimeout(initOrUpdateWorkbenchCharts, 50);
+      } else if (viewName === 'database') {
+        renderDatabaseView();
+      }
+
+      toggleMobileSidebar(false);
+      document.getElementById('mainScrollContainer').scrollTop = 0;
+      lucide.createIcons();
+    }
+
+    function toggleMobileSidebar(open) {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function toggleDesktopSidebar() {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      const sidebar = document.getElementById('appSidebar');
+      const expandBtn = document.getElementById('expandSidebarBtn');
+      if (state.sidebarCollapsed) {
+        sidebar.classList.add('md:hidden');
+        expandBtn.classList.remove('hidden');
+      } else {
+        sidebar.classList.remove('md:hidden');
+        expandBtn.classList.add('hidden');
+      }
+    }
+
+    // ---------- 题库 / 路线聚合查询 ----------
+    function questionsOfTopic(topicId) {
+      return state.questions.filter(q => q.topicId === topicId);
+    }
+
+    function questionsOfRoute(routeId) {
+      const route = ROUTE_MAP[routeId];
+      if (!route) return [];
+      return state.questions.filter(q => route.topics.includes(q.topicId));
+    }
+
+    function masteredPct(list) {
+      if (!list.length) return 0;
+      return Math.round(list.filter(q => q.retention >= 75).length / list.length * 100);
+    }
+
+    function renderSidebarShortcuts() {
+      const routesEl = document.getElementById('sidebarRoutesList');
+      if (routesEl) {
+        routesEl.innerHTML = ROUTES.map(route => `
+          <button onclick="jumpToRouteInDatabase('${route.id}')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs text-notion-text hover:bg-notion-hover transition">
+            <span class="flex items-center gap-2 truncate">
+              <span>${route.icon}</span>
+              <span class="truncate">${route.name}</span>
+            </span>
+            <span id="sideProg-${route.id}" class="text-[11px] text-notion-muted font-mono shrink-0">${masteredPct(questionsOfRoute(route.id))}%</span>
+          </button>
+        `).join('');
+      }
+
+      // 侧边栏只放题量最大的专题，避免 28 个专题把导航撑得过长
+      const topicsEl = document.getElementById('sidebarTopicsList');
+      if (topicsEl) {
+        const top = TOPICS.slice().sort((a, b) => b.questionCount - a.questionCount).slice(0, 8);
+        topicsEl.innerHTML = top.map(topic => `
+          <button onclick="jumpToBankInDatabase('${topic.id}')" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs text-notion-text hover:bg-notion-hover transition">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full ${DOT_CLASSES[topic.tone] || DOT_CLASSES.blue} shrink-0"></span>
+              <span class="truncate">${topic.name}</span>
+            </span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${TONE_CLASSES[topic.tone] || TONE_CLASSES.blue}">${topic.questionCount} 题</span>
+          </button>
+        `).join('');
+      }
+      const hintEl = document.getElementById('sidebarTopicHint');
+      if (hintEl) hintEl.textContent = `共 ${TOPICS.length} 个`;
+    }
+
+    function renderFilterOptions() {
+      const bankSel = document.getElementById('dbBankFilter');
+      if (bankSel && bankSel.options.length <= 1) {
+        bankSel.innerHTML = '<option value="all">全部专题题库</option>' +
+          TOPICS.map(t => `<option value="${t.id}">${t.icon} ${t.name} (${t.questionCount})</option>`).join('');
+      }
+      const routeSel = document.getElementById('dbRouteFilter');
+      if (routeSel && routeSel.options.length <= 1) {
+        routeSel.innerHTML = '<option value="all">全部岗位路线</option>' +
+          ROUTES.map(r => `<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+      }
+    }
+
+    function updateGlobalBadgesAndBasket() {
+      const allDue = getAllDueQuestions();
+      const cappedDue = getCappedDueQuestions();
+
+      document.getElementById('sidebarDueBadge').textContent = `${cappedDue.length} 待刷`;
+      document.getElementById('headerDueCount').textContent = cappedDue.length;
+      document.getElementById('sidebarTotalCount').textContent = `${state.questions.length} 题`;
+      const metaEl = document.getElementById('sidebarBankMeta');
+      if (metaEl) metaEl.textContent = `${TOPICS.length} 个专题 · ${state.questions.length} 道题`;
+
+      // Sidebar Route Progress
+      ROUTES.forEach(route => {
+        const el = document.getElementById(`sideProg-${route.id}`);
+        if (el) el.textContent = `${masteredPct(questionsOfRoute(route.id))}%`;
+      });
+
+      // Custom Selection Inbox
+      const selCount = state.selectedQuestionIds.size;
+      document.getElementById('sidebarBasketCount').textContent = `${selCount} 题`;
+      document.getElementById('dbTopSelectedCount').textContent = selCount;
+      document.getElementById('sidebarStartCustomBtn').disabled = selCount === 0;
+
+      const floatingBar = document.getElementById('floatingCustomBar');
+      if (selCount > 0 && !state.isStudyModalOpen) {
+        floatingBar.classList.remove('hidden');
+        document.getElementById('floatingSelectedCount').textContent = selCount;
+        const selectedObjs = state.questions.filter(q => state.selectedQuestionIds.has(q.id));
+        const parts = TOPICS
+          .map(t => ({ name: t.name, count: selectedObjs.filter(q => q.topicId === t.id).length }))
+          .filter(x => x.count > 0)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3)
+          .map(x => `${x.name} ${x.count} 题`);
+        const more = new Set(selectedObjs.map(q => q.topicId)).size;
+        document.getElementById('floatingSelectedBreakdown').textContent =
+          (parts.join(' · ') || '跨题库自由组合') + (more > 3 ? ` 等 ${more} 个专题` : '');
+      } else {
+        floatingBar.classList.add('hidden');
+      }
+    }
+
+    function renderWorkbenchView() {
+      const allDue = getAllDueQuestions();
+      const cappedDue = getCappedDueQuestions();
+      const deferredCount = Math.max(0, allDue.length - cappedDue.length);
+
+      const totalReviews = state.questions.reduce((acc, q) => acc + q.reviewCount, 0);
+      const coveredCount = state.questions.filter(q => q.reviewCount > 0).length;
+      const avgRetention = Math.round(state.questions.reduce((acc, q) => acc + q.retention, 0) / state.questions.length);
+
+      document.getElementById('metricTodayCount').textContent = state.todayStudiedCount;
+      document.getElementById('metricDueCount').textContent = `${cappedDue.length} / ${allDue.length}`;
+      document.getElementById('metricDueSub').textContent = deferredCount > 0
+        ? `防雪崩已顺延 ${deferredCount} 题至明日`
+        : `全部待复习题均在今日上限内`;
+      document.getElementById('metricTotalReviews').textContent = totalReviews;
+      document.getElementById('metricCoveredSub').textContent = `已覆盖 ${coveredCount}/${state.questions.length} 道面试题`;
+      document.getElementById('metricAvgRetention').textContent = `${avgRetention}%`;
+
+      // 连续打卡天数（按刷题流水里出现过的日期回溯）
+      const streak = getStreakDays();
+      document.getElementById('metricStreakSub').textContent = streak > 0
+        ? `连续打卡第 ${streak} 天 · 保持节奏`
+        : '今天还没有刷题记录，先开一局吧';
+
+      // Anti-Avalanche Callout Details
+      document.getElementById('wbUrgentBadge').textContent = `今日精选 ${cappedDue.length} 题`;
+      const avalancheBadge = document.getElementById('wbAvalancheBadge');
+      if (deferredCount > 0) {
+        avalancheBadge.classList.remove('hidden');
+        avalancheBadge.textContent = `🛡️ 已触发防雪崩熔断：其余 ${deferredCount} 题平滑顺延`;
+      } else {
+        avalancheBadge.classList.add('hidden');
+      }
+
+      document.getElementById('wbCalloutDesc').innerHTML = deferredCount > 0
+        ? `检测到共有 <strong>${allDue.length}</strong> 道题的记忆留存率低于 75%。为避免复习堆积焦虑，系统已按「遗忘紧急度 × 首刷盲区」为您锁定最急需巩固的 <strong>${cappedDue.length}</strong> 道题。`
+        : `当前共有 <strong>${allDue.length}</strong> 道题的记忆留存率衰减至 75% 临界点以下，立即完成复习可将记忆周期延长 3~7 倍。`;
+
+      document.getElementById('wbPrimaryStartText').textContent = `开始今日复习 (${cappedDue.length} 题)`;
+
+      const previewPills = cappedDue.map(q => `
+        <button onclick="startSingleQuestionStudy('${q.id}')" class="px-2.5 py-1 rounded-md text-xs bg-white border border-notion-border text-notion-text hover:bg-notion-hover transition truncate max-w-[230px] flex items-center gap-1.5">
+          <span class="truncate">${q.title}</span>
+          <span class="text-notion-red font-mono font-semibold shrink-0">${q.retention}%</span>
+        </button>
+      `).join('');
+      document.getElementById('wbDuePreviewPills').innerHTML = previewPills || `<span class="text-xs text-notion-green font-medium">🎉 今日抗遗忘队列已全部清空！您可以使用智能抽题继续拓展新题。</span>`;
+
+      // Quick Launch Cards: 岗位刷题路线
+      const cardsHtml = ROUTES.map(route => {
+        const routeQs = questionsOfRoute(route.id);
+        const masteredCount = routeQs.filter(q => q.retention >= 75).length;
+        const pct = masteredPct(routeQs);
+        return `
+          <div class="notion-card notion-card-hover p-4 flex flex-col justify-between space-y-3.5">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-notion-sidebar text-notion-text border border-notion-border truncate">${route.icon} ${route.name}</span>
+                <span class="text-xs font-mono text-notion-muted shrink-0">${masteredCount}/${routeQs.length}</span>
+              </div>
+              <p class="text-xs text-notion-muted line-clamp-2">${route.desc}</p>
+            </div>
+            <div class="space-y-2.5">
+              <div class="space-y-1">
+                <div class="flex justify-between text-[11px] text-notion-muted">
+                  <span>路线掌握率</span>
+                  <span class="font-mono font-semibold text-notion-text">${pct}%</span>
+                </div>
+                <div class="w-full h-1.5 bg-notion-sidebar rounded-full overflow-hidden border border-notion-border">
+                  <div class="h-full bg-notion-blue" style="width: ${pct}%"></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="startRouteStudy('${route.id}')" class="flex-1 py-1.5 px-2.5 rounded text-xs font-medium bg-notion-text text-white hover:bg-black transition">
+                  沉浸刷此路线
+                </button>
+                <button onclick="jumpToRouteInDatabase('${route.id}')" class="py-1.5 px-2.5 rounded text-xs font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover transition">
+                  查看题单
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('wbRoutesAndBanksGrid').innerHTML = cardsHtml;
+
+      // AI Diagnostic Summary：取留存率最低的 3 个专题做对比，并提示盲区题量
+      const weakTopics = TOPICS
+        .map(t => {
+          const list = questionsOfTopic(t.id);
+          const avg = list.length ? Math.round(list.reduce((s, q) => s + q.retention, 0) / list.length) : 0;
+          return { topic: t, avg, total: list.length };
+        })
+        .sort((a, b) => a.avg - b.avg)
+        .slice(0, 3);
+      const topTopics = TOPICS
+        .map(t => ({ topic: t, total: questionsOfTopic(t.id).length }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 3);
+      const unseenCount = state.questions.filter(q => q.reviewCount === 0).length;
+      const seenCount = state.questions.length - unseenCount;
+
+      document.getElementById('wbDiagnosisBox').innerHTML = `
+        <div class="font-semibold text-notion-text flex items-center gap-1.5">
+          <span>🤖 实时记忆诊断报告：</span>
+        </div>
+        <p>• <strong>最薄弱专题</strong>：${weakTopics.map(x => `<code>${x.topic.name}</code> 平均留存 <strong>${x.avg}%</strong>（${x.total} 题）`).join(' · ')}。</p>
+        <p>• <strong>题量最大的专题</strong>：${topTopics.map(x => `<code>${x.topic.name}</code> ${x.total} 题`).join(' · ')}。</p>
+        <p>• <strong>行动建议</strong>：全库 ${state.questions.length} 题中已覆盖 <strong>${seenCount}</strong> 题，还有 <strong>${unseenCount} 道盲区新题</strong>。建议先完成今日 ${cappedDue.length} 道抗遗忘复习，再点右上角「一键特训薄弱与未刷盲区」扫盲。</p>
+      `;
+
+      // 近 16 周刷题热力图：按刷题流水中的真实日期聚合
+      const heatmapEl = document.getElementById('heatmapGrid');
+      const colors = ['bg-[#F1F1EF]', 'bg-[#D3E5EF]', 'bg-[#7FB8E6]', 'bg-[#2383E2]'];
+      const dayCount = {};
+      state.studyLogs.forEach(log => {
+        const day = (log.time || '').slice(0, 10);
+        if (day) dayCount[day] = (dayCount[day] || 0) + 1;
+      });
+      dayCount[todayStr()] = Math.max(dayCount[todayStr()] || 0, state.todayStudiedCount);
+
+      const weeks = 16;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(today);
+      start.setDate(start.getDate() - (weeks * 7 - 1) - today.getDay());
+      let colsHtml = '';
+      for (let w = 0; w < weeks; w++) {
+        let cells = '';
+        for (let d = 0; d < 7; d++) {
+          const cellDate = new Date(start);
+          cellDate.setDate(start.getDate() + w * 7 + d);
+          const key = `${cellDate.getFullYear()}-${pad2(cellDate.getMonth() + 1)}-${pad2(cellDate.getDate())}`;
+          const count = dayCount[key] || 0;
+          const future = cellDate > today;
+          const level = future || count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : 3;
+          cells += `<div class="w-3.5 h-3.5 rounded-[3px] ${colors[level]} border border-black/5" title="${key}：刷题 ${count} 次"></div>`;
+        }
+        colsHtml += `<div class="flex flex-col gap-1.5 shrink-0">${cells}</div>`;
+      }
+      heatmapEl.innerHTML = colsHtml;
+    }
+
+    function getStreakDays() {
+      const days = new Set(state.studyLogs.map(l => (l.time || '').slice(0, 10)).filter(Boolean));
+      if (state.todayStudiedCount > 0) days.add(todayStr());
+      let streak = 0;
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+      const fmt = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      // 今天没刷题时，从昨天开始计算连续天数
+      if (!days.has(fmt(cursor))) cursor.setDate(cursor.getDate() - 1);
+      while (days.has(fmt(cursor))) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function initOrUpdateWorkbenchCharts() {
+      // 1. Ebbinghaus Chart
+      const eCtx = document.getElementById('ebbinghausChart');
+      if (eCtx) {
+        if (ebbinghausChartInstance) ebbinghausChartInstance.destroy();
+        const labels = ['刚刷完', '20分钟', '1小时', '9小时', '1天后', '2天后', '6天后', '31天后'];
+        ebbinghausChartInstance = new Chart(eCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: '4次+间隔复习 (稳固记忆)',
+                data: [100, 99, 97, 95, 93, 91, 88, 84],
+                borderColor: '#448361',
+                tension: 0.35,
+                borderWidth: 2
+              },
+              {
+                label: '2~3次强化复习',
+                data: [100, 94, 88, 83, 78, 73, 66, 55],
+                borderColor: '#2383E2',
+                tension: 0.35,
+                borderWidth: 2
+              },
+              {
+                label: '首次刷完不复习 (快速遗忘)',
+                data: [100, 58, 44, 36, 33, 28, 25, 21],
+                borderColor: '#D44C47',
+                backgroundColor: 'rgba(212, 76, 71, 0.06)',
+                tension: 0.35,
+                borderWidth: 2,
+                fill: true
+              },
+              {
+                label: '75% 复习触发线',
+                data: [75, 75, 75, 75, 75, 75, 75, 75],
+                borderColor: '#D9730D',
+                borderDash: [5, 4],
+                borderWidth: 1.5,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+            scales: {
+              y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 10 } }, grid: { color: '#F1F1EF' } },
+              x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // 2. Radar Chart：取题量最大的 6 个专题作为雷达维度
+      const rCtx = document.getElementById('radarChart');
+      if (rCtx) {
+        if (radarChartInstance) radarChartInstance.destroy();
+        const dimTopics = TOPICS.slice().sort((a, b) => b.questionCount - a.questionCount).slice(0, 6);
+        const dims = dimTopics.map(t => t.name);
+        const dimScores = dimTopics.map(t => {
+          const qs = questionsOfTopic(t.id);
+          if (!qs.length) return 0;
+          return Math.round(qs.reduce((s, q) => s + q.retention, 0) / qs.length);
+        });
+        radarChartInstance = new Chart(rCtx, {
+          type: 'radar',
+          data: {
+            labels: dims,
+            datasets: [{
+              label: '掌握度 (%)',
+              data: dimScores,
+              backgroundColor: 'rgba(35, 131, 226, 0.16)',
+              borderColor: '#2383E2',
+              pointBackgroundColor: '#2383E2',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { r: { min: 0, max: 100, ticks: { display: false }, pointLabels: { font: { size: 11 } } } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    }
+
+    function switchShowcaseMode(mode) {
+      state.showcaseMode = mode;
+      const rBtn = document.getElementById('showcaseBtn-routes');
+      const bBtn = document.getElementById('showcaseBtn-banks');
+      const rGrid = document.getElementById('showcaseRoutesGrid');
+      const bGrid = document.getElementById('showcaseBanksGrid');
+
+      if (mode === 'routes') {
+        rBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold bg-notion-text text-white transition';
+        bBtn.className = 'px-2.5 py-1 rounded text-xs font-medium bg-white border border-notion-border text-notion-text hover:bg-notion-hover transition';
+        rGrid.classList.remove('hidden');
+        rGrid.classList.add('grid');
+        bGrid.classList.add('hidden');
+        bGrid.classList.remove('grid');
+      } else {
+        bBtn.className = 'px-2.5 py-1 rounded text-xs font-semibold bg-notion-text text-white transition';
+        rBtn.className = 'px-2.5 py-1 rounded text-xs font-medium bg-white border border-notion-border text-notion-text hover:bg-notion-hover transition';
+        bGrid.classList.remove('hidden');
+        bGrid.classList.add('grid');
+        rGrid.classList.add('hidden');
+        rGrid.classList.remove('grid');
+      }
+    }
+
+    function toggleShowcaseCollapse() {
+      state.showcaseCollapsed = !state.showcaseCollapsed;
+      const wrap = document.getElementById('showcaseContentWrap');
+      const txt = document.getElementById('showcaseCollapseText');
+      if (state.showcaseCollapsed) {
+        wrap.classList.add('hidden');
+        txt.textContent = '展开路线/题库速览';
+      } else {
+        wrap.classList.remove('hidden');
+        txt.textContent = '收起速览卡';
+      }
+    }
+
+    function setDatabaseTab(tab) {
+      state.databaseTab = tab;
+      state.dbVisibleCount = 60;
+      ['all', 'due', 'weak', 'mastered', 'logs'].forEach(t => {
+        const el = document.getElementById(`dbTab-${t}`);
+        if (!el) return;
+        if (t === tab) {
+          el.classList.add('border-notion-text', 'text-notion-text', 'font-semibold');
+          el.classList.remove('border-transparent', 'text-notion-muted');
+        } else {
+          el.classList.remove('border-notion-text', 'text-notion-text', 'font-semibold');
+          el.classList.add('border-transparent', 'text-notion-muted');
+        }
+      });
+      renderUnifiedDatabase();
+    }
+
+    function renderDatabaseView() {
+      // 0. 动态更新速览按钮上的数量
+      document.getElementById('showcaseBtn-routes').innerHTML = `🛣️ 岗位刷题路线 (${ROUTES.length})`;
+      document.getElementById('showcaseBtn-banks').innerHTML = `📦 专题题库 (${TOPICS.length})`;
+
+      // 1. Showcase Routes Cards
+      document.getElementById('showcaseRoutesGrid').innerHTML = ROUTES.map(route => {
+        const routeQs = questionsOfRoute(route.id);
+        const pct = masteredPct(routeQs);
+        return `
+          <div class="notion-card p-3.5 flex flex-col justify-between space-y-3 bg-white">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-notion-sidebar text-notion-text border border-notion-border truncate">${route.icon} ${route.name}</span>
+                <span class="text-[11px] font-mono text-notion-muted shrink-0">${pct}% 已稳固</span>
+              </div>
+              <p class="text-[11px] text-notion-muted">${route.desc}</p>
+              <div class="flex flex-wrap gap-1 pt-1">
+                ${route.topics.map(id => TOPIC_MAP[id] ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-notion-sidebar text-notion-muted border border-notion-border">${TOPIC_MAP[id].name}</span>` : '').join('')}
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 pt-1">
+              <button onclick="filterByRoute('${route.id}')" class="flex-1 py-1 px-2 rounded text-[11px] font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover transition">
+                在下表筛选此路线
+              </button>
+              <button onclick="startRouteStudy('${route.id}')" class="flex-1 py-1 px-2 rounded text-[11px] font-medium bg-notion-text text-white hover:bg-black transition">
+                直接开刷 (${routeQs.length}题)
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 2. Showcase Banks Cards（28 个专题）
+      document.getElementById('showcaseBanksGrid').innerHTML = TOPICS.map(topic => {
+        const bankQs = questionsOfTopic(topic.id);
+        const totalReviews = bankQs.reduce((s, q) => s + q.reviewCount, 0);
+        return `
+          <div class="notion-card p-3.5 flex flex-col justify-between space-y-3 bg-white">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-xs font-semibold ${TONE_CLASSES[topic.tone] || TONE_CLASSES.blue} truncate">${topic.icon} ${topic.name}</span>
+                <span class="text-[11px] font-mono text-notion-muted shrink-0">累计刷 ${totalReviews} 次</span>
+              </div>
+              <p class="text-[11px] text-notion-muted line-clamp-2">${topic.points.join(' · ') || `难度 ${'★'.repeat(topic.stars)}`}</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-1">
+              <button onclick="filterByBank('${topic.id}')" class="flex-1 py-1 px-2 rounded text-[11px] font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover transition">
+                在下表筛选此题库
+              </button>
+              <button onclick="startBankStudy('${topic.id}')" class="flex-1 py-1 px-2 rounded text-[11px] font-medium bg-notion-blue text-white hover:bg-[#1B6EC2] transition">
+                整库开刷 (${bankQs.length}题)
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderUnifiedDatabase();
+    }
+
+    function getFilteredDatabaseQuestions() {
+      const searchVal = (document.getElementById('dbSearchInput')?.value || '').trim().toLowerCase();
+      const bankVal = document.getElementById('dbBankFilter')?.value || 'all';
+      const routeVal = document.getElementById('dbRouteFilter')?.value || 'all';
+      const diffVal = document.getElementById('dbDiffFilter')?.value || 'all';
+
+      return state.questions.filter(q => {
+        // Tab filter
+        if (state.databaseTab === 'due' && !(q.reviewCount > 0 && q.retention < 75)) return false;
+        if (state.databaseTab === 'weak' && !(q.retention < 70 || q.reviewCount === 0 || q.lastRating === 'forgot' || q.lastRating === 'hard')) return false;
+        if (state.databaseTab === 'mastered' && q.retention < 75) return false;
+
+        // Dropdown & Search filters
+        if (searchVal && !q.title.toLowerCase().includes(searchVal) && !(q.userNote || '').toLowerCase().includes(searchVal) && !q.answer.toLowerCase().includes(searchVal)) return false;
+        if (bankVal !== 'all' && q.topicId !== bankVal) return false;
+        if (routeVal !== 'all' && !q.routeIds.includes(routeVal)) return false;
+        if (diffVal !== 'all' && q.difficulty !== diffVal) return false;
+        return true;
+      });
+    }
+
+    function renderUnifiedDatabase() {
+      // Update Tab Badge Counts
+      document.getElementById('tabCount-all').textContent = state.questions.length;
+      document.getElementById('tabCount-due').textContent = state.questions.filter(q => q.reviewCount > 0 && q.retention < 75).length;
+      document.getElementById('tabCount-weak').textContent = state.questions.filter(q => q.retention < 70 || q.reviewCount === 0 || q.lastRating === 'forgot' || q.lastRating === 'hard').length;
+      document.getElementById('tabCount-mastered').textContent = state.questions.filter(q => q.retention >= 75).length;
+
+      const filterToolbar = document.getElementById('dbFilterToolbar');
+      const tWrap = document.getElementById('dbTableViewWrapper');
+      const gWrap = document.getElementById('dbGalleryViewWrapper');
+      const logsWrap = document.getElementById('dbLogsViewWrapper');
+
+      if (state.databaseTab === 'logs') {
+        filterToolbar.classList.add('hidden');
+        tWrap.classList.add('hidden');
+        gWrap.classList.add('hidden');
+        logsWrap.classList.remove('hidden');
+
+        const ratingLabelMap = {
+          forgot: '<span class="px-2 py-0.5 rounded bg-notion-redBg text-notion-red text-[11px] font-medium">1·忘记了</span>',
+          hard: '<span class="px-2 py-0.5 rounded bg-notion-orangeBg text-notion-orange text-[11px] font-medium">2·印象模糊</span>',
+          good: '<span class="px-2 py-0.5 rounded bg-notion-blueBg text-notion-blue text-[11px] font-medium">3·比较熟悉</span>',
+          easy: '<span class="px-2 py-0.5 rounded bg-notion-greenBg text-notion-green text-[11px] font-medium">4·完全掌握</span>'
+        };
+
+        logsWrap.innerHTML = state.studyLogs.map(log => `
+          <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-notion-hover/40">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="font-mono text-[11px] text-notion-muted shrink-0">${log.time}</span>
+              <span class="px-1.5 py-0.5 rounded bg-notion-sidebar text-[11px] text-notion-muted shrink-0">${log.bankName}</span>
+              <span class="font-medium text-notion-text truncate cursor-pointer hover:text-notion-blue" onclick="startSingleQuestionStudy('${log.qId}')">${log.qTitle}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[11px] text-notion-muted font-mono">第 ${log.countAfter} 次刷完</span>
+              ${ratingLabelMap[log.rating] || ''}
+              <span class="text-[11px] font-mono font-semibold text-notion-blue">留存 -> ${log.retentionAfter}%</span>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      filterToolbar.classList.remove('hidden');
+      logsWrap.classList.add('hidden');
+      if (state.dbLayout === 'table') {
+        tWrap.classList.remove('hidden');
+        gWrap.classList.add('hidden');
+      } else {
+        gWrap.classList.remove('hidden');
+        tWrap.classList.add('hidden');
+      }
+
+      const filtered = getFilteredDatabaseQuestions();
+      // 题库共 787 题，一次性渲染所有行会明显卡顿，这里分页渲染
+      const visible = filtered.slice(0, state.dbVisibleCount);
+      const hiddenCount = filtered.length - visible.length;
+
+      const moreBtnHtml = hiddenCount > 0
+        ? `<tr><td colspan="7" class="py-4 text-center">
+             <button onclick="loadMoreDatabase()" class="px-4 py-1.5 rounded-md text-xs font-medium bg-notion-sidebar border border-notion-border hover:bg-notion-hover transition">
+               加载更多（还有 ${hiddenCount} 题）
+             </button>
+           </td></tr>`
+        : '';
+
+      // Render Table Rows
+      document.getElementById('dbTableBody').innerHTML = visible.map(q => {
+        const checked = state.selectedQuestionIds.has(q.id) ? 'checked' : '';
+        const noteSnippet = q.userNote
+          ? `<div class="mt-1 text-[11px] text-notion-blue bg-notion-blueBg/40 px-2 py-0.5 rounded inline-block truncate max-w-md">📝 批注: ${q.userNote}</div>`
+          : '';
+        return `
+          <tr class="hover:bg-notion-hover/60 transition">
+            <td class="py-3 px-3 text-center align-top pt-3.5">
+              <input type="checkbox" ${checked} onchange="toggleSelectQuestion('${q.id}')" class="notion-checkbox" />
+            </td>
+            <td class="py-3 px-3 max-w-sm">
+              <div class="font-medium text-notion-text cursor-pointer hover:text-notion-blue line-clamp-2" onclick="startSingleQuestionStudy('${q.id}')">${q.title}</div>
+              ${noteSnippet}
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">
+              <div>${getBankBadge(q.topicId, q.topicName)}</div>
+              <div class="text-[11px] text-notion-muted mt-1">${q.category || '未分类'}${q.priority ? ' · 🔥高频' : ''}</div>
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">${getDifficultyBadge(q.difficulty)}</td>
+            <td class="py-3 px-3 whitespace-nowrap font-mono">
+              <span class="px-1.5 py-0.5 rounded bg-notion-sidebar text-notion-text font-semibold">已刷 ${q.reviewCount} 次</span>
+              <div class="text-[11px] text-notion-muted mt-0.5">${q.lastReviewedAt}</div>
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">
+              ${getRetentionBarHtml(q.retention)}
+              <div class="text-[10px] ${q.retention < 75 ? 'text-notion-orange font-medium' : 'text-notion-muted'} mt-0.5">${q.nextReviewText}</div>
+            </td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <button onclick="startSingleQuestionStudy('${q.id}')" class="px-2.5 py-1 rounded bg-notion-sidebar border border-notion-border hover:bg-notion-text hover:text-white transition text-xs font-medium">
+                沉浸刷
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') + moreBtnHtml || `<tr><td colspan="7" class="py-8 text-center text-notion-muted">当前视图或筛选条件下暂无题目</td></tr>`;
+
+      // Render Gallery Cards
+      document.getElementById('dbGalleryViewWrapper').innerHTML = visible.map(q => {
+        const checked = state.selectedQuestionIds.has(q.id) ? 'checked' : '';
+        return `
+          <div class="notion-card notion-card-hover p-4 flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <label class="flex items-center gap-2 cursor-pointer text-xs text-notion-muted">
+                  <input type="checkbox" ${checked} onchange="toggleSelectQuestion('${q.id}')" class="notion-checkbox" />
+                  <span>加入待刷清单</span>
+                </label>
+                ${getDifficultyBadge(q.difficulty)}
+              </div>
+              <h4 onclick="startSingleQuestionStudy('${q.id}')" class="text-sm font-semibold text-notion-text hover:text-notion-blue cursor-pointer line-clamp-2">${q.title}</h4>
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                ${getBankBadge(q.topicId, q.topicName)}
+                <span class="px-2 py-0.5 rounded text-[11px] bg-notion-sidebar text-notion-muted">${q.category || '未分类'}</span>
+                ${q.priority ? `<span class="px-2 py-0.5 rounded text-[11px] bg-notion-orangeBg text-notion-orange">🔥 高频</span>` : ''}
+              </div>
+              ${q.userNote ? `<div class="text-[11px] text-notion-blue bg-notion-blueBg/40 px-2 py-1 rounded truncate">📝 ${q.userNote}</div>` : ''}
+            </div>
+            <div class="pt-3 border-t border-notion-border flex items-center justify-between text-xs">
+              <div class="text-[11px] text-notion-muted font-mono">
+                已刷 ${q.reviewCount} 次 · 留存 <strong class="${q.retention < 75 ? 'text-notion-orange' : 'text-notion-green'}">${q.retention}%</strong>
+              </div>
+              <button onclick="startSingleQuestionStudy('${q.id}')" class="px-2.5 py-1 rounded bg-notion-text text-white hover:bg-black transition text-xs">
+                沉浸刷
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('') + (hiddenCount > 0
+        ? `<button onclick="loadMoreDatabase()" class="notion-card notion-card-hover p-4 text-xs font-medium text-notion-muted flex items-center justify-center">
+             加载更多（还有 ${hiddenCount} 题）
+           </button>`
+        : '');
+    }
+
+    function loadMoreDatabase() {
+      state.dbVisibleCount += 100;
+      renderUnifiedDatabase();
+    }
+
+    function setDbLayout(layout) {
+      state.dbLayout = layout;
+      const tBtn = document.getElementById('dbLayoutBtn-table');
+      const gBtn = document.getElementById('dbLayoutBtn-gallery');
+      if (layout === 'table') {
+        tBtn.classList.add('bg-notion-sidebar', 'text-notion-text');
+        tBtn.classList.remove('text-notion-muted');
+        gBtn.classList.remove('bg-notion-sidebar', 'text-notion-text');
+        gBtn.classList.add('text-notion-muted');
+      } else {
+        gBtn.classList.add('bg-notion-sidebar', 'text-notion-text');
+        gBtn.classList.remove('text-notion-muted');
+        tBtn.classList.remove('bg-notion-sidebar', 'text-notion-text');
+        tBtn.classList.add('text-notion-muted');
+      }
+      renderUnifiedDatabase();
+    }
+
+    function filterByRoute(routeId) {
+      setDatabaseTab('all');
+      document.getElementById('dbRouteFilter').value = routeId;
+      document.getElementById('dbBankFilter').value = 'all';
+      renderUnifiedDatabase();
+    }
+
+    function filterByBank(bankId) {
+      setDatabaseTab('all');
+      document.getElementById('dbBankFilter').value = bankId;
+      document.getElementById('dbRouteFilter').value = 'all';
+      renderUnifiedDatabase();
+    }
+
+    function jumpToRouteInDatabase(routeId) {
+      switchView('database');
+      switchShowcaseMode('routes');
+      filterByRoute(routeId);
+    }
+
+    function jumpToBankInDatabase(bankId) {
+      switchView('database');
+      switchShowcaseMode('banks');
+      filterByBank(bankId);
+    }
+
+    function openQuickFilterSearch() {
+      switchView('database');
+      setDatabaseTab('all');
+      setTimeout(() => document.getElementById('dbSearchInput')?.focus(), 80);
+    }
+
+    function toggleSelectQuestion(qId) {
+      if (state.selectedQuestionIds.has(qId)) state.selectedQuestionIds.delete(qId);
+      else state.selectedQuestionIds.add(qId);
+      updateGlobalBadgesAndBasket();
+      if (state.currentView === 'database') renderUnifiedDatabase();
+    }
+
+    function toggleSelectAllFiltered() {
+      const filtered = getFilteredDatabaseQuestions();
+      const allSelected = filtered.every(q => state.selectedQuestionIds.has(q.id));
+      filtered.forEach(q => {
+        if (allSelected) state.selectedQuestionIds.delete(q.id);
+        else state.selectedQuestionIds.add(q.id);
+      });
+      updateGlobalBadgesAndBasket();
+      renderUnifiedDatabase();
+      showToast(allSelected ? '已从待刷清单移除当前筛选题目' : `已将 ${filtered.length} 道题加入待刷清单`);
+    }
+
+    function studyAllFilteredNow() {
+      const filtered = getFilteredDatabaseQuestions();
+      launchStudyModal(filtered.map(q => q.id), `🎯 当前筛选队列 (${filtered.length} 题)`);
+    }
+
+    function clearCustomSelection() {
+      state.selectedQuestionIds.clear();
+      updateGlobalBadgesAndBasket();
+      if (state.currentView === 'database') renderUnifiedDatabase();
+      showToast('已清空待刷清单');
+    }
+
+    function openSmartPresetModal() {
+      renderPresetTopicGrid();
+      document.getElementById('smartPresetModal').classList.remove('hidden');
+    }
+
+    function closeSmartPresetModal() {
+      document.getElementById('smartPresetModal').classList.add('hidden');
+    }
+
+    function renderPresetTopicGrid() {
+      document.getElementById('presetTopicGrid').innerHTML = TOPICS.map(topic => `
+        <label class="flex items-center gap-2 p-2 rounded-lg border border-notion-border bg-white cursor-pointer text-xs">
+          <input type="checkbox" data-topic="${topic.id}" ${state.presetTopics.has(topic.id) ? 'checked' : ''}
+                 onchange="togglePresetTopic('${topic.id}', this.checked)" class="notion-checkbox" />
+          <span class="truncate">${topic.icon} ${topic.name}</span>
+          <span class="ml-auto text-[10px] text-notion-muted font-mono shrink-0">${topic.questionCount}</span>
+        </label>
+      `).join('');
+    }
+
+    function togglePresetTopic(topicId, checked) {
+      if (checked) state.presetTopics.add(topicId);
+      else state.presetTopics.delete(topicId);
+    }
+
+    function setPresetTopicsAll(checked) {
+      if (checked) state.presetTopics = new Set(TOPICS.map(t => t.id));
+      else state.presetTopics.clear();
+      renderPresetTopicGrid();
+    }
+
+    function setPresetCount(cnt) {
+      state.presetCount = cnt;
+      [3, 5, 10, 99].forEach(n => {
+        const btn = document.getElementById(`presetCountBtn-${n}`);
+        if (!btn) return;
+        if (n === cnt) {
+          btn.className = 'preset-cnt-btn py-2 rounded-lg border border-notion-blue bg-notion-blueBg text-notion-blue font-bold font-mono';
+        } else {
+          btn.className = 'preset-cnt-btn py-2 rounded-lg border border-notion-border bg-white text-notion-text font-mono';
+        }
+      });
+    }
+
+    function launchSmartPresetStudy() {
+      const strategy = document.getElementById('presetStrategySelect').value;
+
+      let pool = state.questions.filter(q => state.presetTopics.has(q.topicId));
+      if (pool.length === 0) pool = [...state.questions];
+
+      if (strategy === 'due_first') {
+        pool.sort((a, b) => a.retention - b.retention);
+      } else if (strategy === 'weak_only') {
+        const weak = pool.filter(q => q.retention < 75);
+        if (weak.length > 0) pool = weak.sort((a, b) => a.retention - b.retention);
+      } else if (strategy === 'unseen_only') {
+        const unseen = pool.filter(q => q.reviewCount === 0);
+        if (unseen.length > 0) pool = unseen;
+      } else if (strategy === 'priority_first') {
+        pool.sort((a, b) => (b.priority - a.priority) || (a.retention - b.retention));
+      } else if (strategy === 'random_all') {
+        pool.sort(() => Math.random() - 0.5);
+      }
+
+      const finalQueue = pool.slice(0, state.presetCount).map(q => q.id);
+      saveAppState();
+      closeSmartPresetModal();
+      launchStudyModal(finalQueue, `⚡ 智能抽题组卷 (${finalQueue.length} 题)`);
+    }
+
+    function launchStudyModal(qIds, queueTitle) {
+      if (!qIds) qIds = state.questions.slice(0, 5).map(q => q.id);
+      if (!qIds.length) {
+        showToast('当前队列为空，请先选择题目或调整筛选条件', 'ℹ️');
+        return;
+      }
+      state.studyQueue = [...qIds];
+      state.studyQueueTitle = queueTitle;
+      state.currentStudyIndex = 0;
+      state.isAnswerRevealed = false;
+      state.sessionCompletedCount = 0;
+      state.sessionMasteredCount = 0;
+      state.sessionSeconds = 0;
+      state.isStudyModalOpen = true;
+
+      document.getElementById('studyModalOverlay').classList.remove('hidden');
+      updateGlobalBadgesAndBasket();
+      startStudyTimer();
+      renderStudyCard();
+    }
+
+    function closeStudyModal() {
+      state.isStudyModalOpen = false;
+      clearInterval(timerInterval);
+      document.getElementById('studyModalOverlay').classList.add('hidden');
+      refreshAllViews();
+    }
+
+    function startDailyCappedReview() {
+      const cappedIds = getCappedDueQuestions().map(q => q.id);
+      launchStudyModal(cappedIds, `⏰ 今日抗遗忘复习队列 (${cappedIds.length} 题)`);
+    }
+
+    function startCustomSelectionStudy() {
+      const customIds = Array.from(state.selectedQuestionIds);
+      launchStudyModal(customIds, `✨ 待刷清单自由组合 (${customIds.length} 题)`);
+    }
+
+    function startBankStudy(topicId) {
+      const topic = TOPIC_MAP[topicId];
+      const ids = questionsOfTopic(topicId).map(q => q.id);
+      launchStudyModal(ids, `${topic.icon} 专题整库：${topic.name} (${ids.length} 题)`);
+    }
+
+    function startRouteStudy(routeId) {
+      const route = ROUTE_MAP[routeId];
+      const ids = questionsOfRoute(routeId).map(q => q.id);
+      launchStudyModal(ids, `${route.icon} 岗位路线：${route.name} (${ids.length} 题)`);
+    }
+
+    function startSingleQuestionStudy(qId) {
+      const q = state.questions.find(item => item.id === qId);
+      if (!q) return;
+      launchStudyModal([qId], `🎯 单题沉浸强化：${q.title.slice(0, 18)}...`);
+    }
+
+    function startWeaknessSpecialStudy() {
+      const weakIds = state.questions.filter(q => q.retention < 75 || q.reviewCount === 0).map(q => q.id);
+      launchStudyModal(weakIds, '🩺 薄弱项与未刷盲区特训队列');
+    }
+
+    function startStudyTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        state.sessionSeconds++;
+        const mins = String(Math.floor(state.sessionSeconds / 60)).padStart(2, '0');
+        const secs = String(state.sessionSeconds % 60).padStart(2, '0');
+        const el = document.getElementById('studyTimerDisplay');
+        if (el) el.textContent = `⏱️ ${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function renderStudyCard() {
+      const qId = state.studyQueue[state.currentStudyIndex];
+      const q = state.questions.find(item => item.id === qId) || state.questions[0];
+      if (!q) return;
+
+      const total = state.studyQueue.length;
+      const idx = state.currentStudyIndex + 1;
+      document.getElementById('studySessionTitle').textContent = state.studyQueueTitle;
+      document.getElementById('studyQueueCounter').textContent = `${idx} / ${total}`;
+      document.getElementById('studyProgressBar').style.width = `${Math.round((idx / total) * 100)}%`;
+
+      const routeLabel = q.routeIds.length ? ROUTE_MAP[q.routeIds[0]].name : '通用专题';
+      document.getElementById('studyMetaBadges').innerHTML = `
+        ${getBankBadge(q.topicId, q.topicName)}
+        <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-notion-sidebar text-notion-text border border-notion-border">🛣️ ${routeLabel}</span>
+        ${q.priority ? '<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-notion-orangeBg text-notion-orange">🔥 高频必考</span>' : ''}
+        ${getDifficultyBadge(q.difficulty)}
+      `;
+
+      document.getElementById('studyHistoryStatsPill').innerHTML = `
+        已刷 <strong class="text-notion-text">${q.reviewCount}</strong> 次 · 上次: ${q.lastReviewedAt} · 留存 <strong class="${q.retention < 75 ? 'text-notion-orange' : 'text-notion-green'}">${q.retention}%</strong>
+      `;
+
+      document.getElementById('studyQuestionTitle').textContent = q.title;
+      document.getElementById('studyQuestionHint').innerHTML = `
+        <span class="text-base shrink-0">💡</span>
+        <div><strong>记忆锚点：</strong>${q.hint || '先自己组织 30 秒版回答，再对照下方标准解析。'}</div>
+      `;
+
+      // Reset 10-Second Keyword Anchor & Answer Panel
+      state.isAnswerRevealed = false;
+      const kwInput = document.getElementById('studyKeywordInput');
+      kwInput.value = '';
+      document.getElementById('studyPreRevealArea').classList.remove('hidden');
+      document.getElementById('studyAnswerPanel').classList.add('hidden');
+      document.getElementById('studyFooterPreHint').classList.remove('hidden');
+      const footerBtns = document.getElementById('studyFooterRatingBtns');
+      footerBtns.classList.add('hidden');
+      footerBtns.classList.remove('grid');
+
+      // 题库原始图解（图文双通道记忆）
+      const illusEl = document.getElementById('studyAnswerIllustration');
+      if (q.image) {
+        illusEl.className = 'space-y-2';
+        illusEl.innerHTML = `
+          <a href="${q.image}" target="_blank" rel="noopener" class="block">
+            <img src="${q.image}" alt="${q.title}" loading="lazy" class="w-full rounded-lg border border-notion-border bg-white" />
+          </a>
+          <div class="text-[11px] text-notion-muted text-center">题库原图 · 点击查看大图</div>
+        `;
+      } else {
+        illusEl.className = 'hidden';
+        illusEl.innerHTML = '';
+      }
+
+      document.getElementById('studyAnswerContent').innerHTML = mdToHtml(q.answer) +
+        `<div class="pt-2 mt-1 border-t border-notion-border text-[11px] text-notion-muted">
+           内容来源：<a href="${q.sourceUrl}" target="_blank" rel="noopener">ai-interview-guide · ${q.topicName}</a>
+         </div>`;
+      document.getElementById('studyPersonalNote').value = q.userNote || '';
+      document.getElementById('studyCardScrollWrap').scrollTop = 0;
+
+      lucide.createIcons();
+    }
+
+    function revealStudyAnswer() {
+      state.isAnswerRevealed = true;
+      const typedKw = document.getElementById('studyKeywordInput').value.trim();
+      document.getElementById('studyPreRevealArea').classList.add('hidden');
+      document.getElementById('studyAnswerPanel').classList.remove('hidden');
+
+      const compareBox = document.getElementById('studyUserAnchorCompareBox');
+      const anchorTextEl = document.getElementById('studyUserAnchorText');
+      if (typedKw) {
+        compareBox.classList.remove('hidden');
+        anchorTextEl.textContent = typedKw;
+      } else {
+        compareBox.classList.remove('hidden');
+        anchorTextEl.textContent = '（未输入锚点词，直接心算默背）';
+      }
+
+      document.getElementById('studyFooterPreHint').classList.add('hidden');
+      const footerBtns = document.getElementById('studyFooterRatingBtns');
+      footerBtns.classList.remove('hidden');
+      footerBtns.classList.add('grid');
+    }
+
+    function saveCurrentQuestionNote(val) {
+      const qId = state.studyQueue[state.currentStudyIndex];
+      const q = state.questions.find(item => item.id === qId);
+      if (!q) return;
+      q.userNote = val;
+      saveAppState();
+      const statusEl = document.getElementById('noteSaveStatus');
+      statusEl.textContent = '✓ 已实时保存';
+    }
+
+    function submitStudyRating(rating) {
+      const qId = state.studyQueue[state.currentStudyIndex];
+      const q = state.questions.find(item => item.id === qId);
+      if (!q) return;
+
+      q.reviewCount += 1;
+      const timestamp = getCurrentTimestampStr();
+      q.lastReviewedAt = timestamp;
+      q.lastRating = rating;
+
+      // 艾宾浩斯四档评分：留存率与下次复习节点
+      const RATING_PRESETS = {
+        forgot: { retention: 35, nextReviewText: '10 分钟后重刷' },
+        hard: { retention: 65, nextReviewText: `1 天后 (${addDaysDate(1)})` },
+        good: { retention: 86, nextReviewText: `3 天后 (${addDaysDate(3)})` },
+        easy: { retention: 98, nextReviewText: `7 天后 (${addDaysDate(7)})` }
+      };
+      const preset = RATING_PRESETS[rating];
+      if (preset) {
+        q.retention = preset.retention;
+        q.nextReviewText = preset.nextReviewText;
+      }
+
+      state.studyLogs.unshift({
+        id: 'log_' + Date.now(),
+        qId: q.id,
+        qTitle: q.title,
+        bankName: q.topicName,
+        time: timestamp,
+        rating,
+        countAfter: q.reviewCount,
+        retentionAfter: q.retention
+      });
+
+      state.todayStudiedCount += 1;
+      state.sessionCompletedCount += 1;
+      if (rating === 'good' || rating === 'easy') state.sessionMasteredCount += 1;
+
+      saveAppState();
+
+      if (state.currentStudyIndex < state.studyQueue.length - 1) {
+        state.currentStudyIndex += 1;
+        renderStudyCard();
+        showToast(`已记录第 ${q.reviewCount} 次刷完 · 留存率更新为 ${q.retention}%`, '✅');
+      } else {
+        closeStudyModal();
+        openSessionSummaryModal();
+      }
+    }
+
+    function prevStudyQuestion() {
+      if (state.currentStudyIndex > 0) {
+        state.currentStudyIndex -= 1;
+        renderStudyCard();
+      } else {
+        showToast('已经是当前队列第一题', 'ℹ️');
+      }
+    }
+
+    function nextStudyQuestion() {
+      if (state.currentStudyIndex < state.studyQueue.length - 1) {
+        state.currentStudyIndex += 1;
+        renderStudyCard();
+      } else {
+        showToast('已经是当前队列最后一题', 'ℹ️');
+      }
+    }
+
+    function openSessionSummaryModal() {
+      const avgRet = Math.round(state.questions.reduce((s, q) => s + q.retention, 0) / state.questions.length);
+      document.getElementById('sumModalCount').textContent = state.sessionCompletedCount || state.studyQueue.length;
+      document.getElementById('sumModalMastered').textContent = state.sessionMasteredCount;
+      document.getElementById('sumModalAvgRet').textContent = `${avgRet}%`;
+      document.getElementById('sessionSummaryModal').classList.remove('hidden');
+    }
+
+    function closeSessionSummaryModal() {
+      document.getElementById('sessionSummaryModal').classList.add('hidden');
+    }
+
+    function refreshAllViews() {
+      renderSidebarShortcuts();
+      renderFilterOptions();
+      updateGlobalBadgesAndBasket();
+      if (state.currentView === 'workbench') {
+        renderWorkbenchView();
+        initOrUpdateWorkbenchCharts();
+      } else {
+        renderDatabaseView();
+      }
+      lucide.createIcons();
+    }
+
+    // Mobile Touch Swipe Gesture on Study Card (Left Swipe = Hard, Right Swipe = Good/Mastered)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const swipeCardEl = document.getElementById('studySwipeCard');
+
+    swipeCardEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    swipeCardEl.addEventListener('touchend', (e) => {
+      if (!state.isStudyModalOpen || !state.isAnswerRevealed) return;
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) > 75 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) {
+          swipeCardEl.style.transform = 'translateX(-40px)';
+          setTimeout(() => {
+            swipeCardEl.style.transform = '';
+            submitStudyRating('hard');
+          }, 140);
+        } else {
+          swipeCardEl.style.transform = 'translateX(40px)';
+          setTimeout(() => {
+            swipeCardEl.style.transform = '';
+            submitStudyRating('good');
+          }, 140);
+        }
+      }
+    }, { passive: true });
+
+    // Global Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isInputFocused = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+      if (e.key === 'Escape' && state.isStudyModalOpen) {
+        closeStudyModal();
+        return;
+      }
+
+      if (isInputFocused) return;
+
+      if (e.key === '/' && !state.isStudyModalOpen) {
+        e.preventDefault();
+        openQuickFilterSearch();
+        return;
+      }
+
+      if (state.isStudyModalOpen) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (!state.isAnswerRevealed) revealStudyAnswer();
+        } else if (e.key === '1' && state.isAnswerRevealed) {
+          submitStudyRating('forgot');
+        } else if (e.key === '2' && state.isAnswerRevealed) {
+          submitStudyRating('hard');
+        } else if (e.key === '3' && state.isAnswerRevealed) {
+          submitStudyRating('good');
+        } else if (e.key === '4' && state.isAnswerRevealed) {
+          submitStudyRating('easy');
+        } else if (e.key === 'ArrowLeft') {
+          prevStudyQuestion();
+        } else if (e.key === 'ArrowRight') {
+          nextStudyQuestion();
+        }
+      }
+    });
+
+    window.onload = function () {
+      loadAppState();
+      if (!state.questions.length) {
+        document.getElementById('view-workbench').innerHTML =
+          '<div class="p-10 text-center text-notion-muted">未能读取题库数据（data/bank.js）。请确认该文件与 index.html 同目录，或重新运行 tools/import_questions.py 生成。</div>';
+        return;
+      }
+      refreshAllViews();
+      switchView('workbench');
+    };
+  </script>
+</body>
+</html>
