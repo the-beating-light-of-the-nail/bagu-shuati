@@ -52,7 +52,9 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'cloudflare_module',
+    // 只有生产构建才用 Cloudflare Workers preset；本地 dev 走默认 node-server，
+    // 否则 dev 需要 miniflare 才能跑起来。
+    ...(process.env.NODE_ENV === 'production' ? { preset: 'cloudflare_module' } : {}),
     prerender: {
       // 用上面的显式清单而不是爬链：题库答案里带有跨站外链与 `/?q=` 深链，
       // 交给爬虫会去预渲染无意义的带查询参数地址（nitro 会报 500）。
